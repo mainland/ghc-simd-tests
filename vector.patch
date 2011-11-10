@@ -1,0 +1,26 @@
+diff --git a/Data/Vector/Primitive.hs b/Data/Vector/Primitive.hs
+index 1fe3677..f018610 100644
+--- a/Data/Vector/Primitive.hs
++++ b/Data/Vector/Primitive.hs
+@@ -17,7 +17,7 @@
+ 
+ module Data.Vector.Primitive (
+   -- * Primitive vectors
+-  Vector, MVector(..), Prim,
++  Vector(..), MVector(..), Prim,
+ 
+   -- * Accessors
+ 
+diff --git a/Data/Vector/Unboxed.hs b/Data/Vector/Unboxed.hs
+index 8198a60..9a63295 100644
+--- a/Data/Vector/Unboxed.hs
++++ b/Data/Vector/Unboxed.hs
+@@ -37,7 +37,7 @@
+ 
+ module Data.Vector.Unboxed (
+   -- * Unboxed vectors
+-  Vector, MVector(..), Unbox,
++  Vector(..), MVector(..), Unbox,
+ 
+   -- * Accessors
+ 
