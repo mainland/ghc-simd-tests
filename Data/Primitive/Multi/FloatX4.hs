@@ -14,13 +14,10 @@ module Data.Primitive.Multi.FloatX4 (
 
 import Data.Primitive
 import Data.Primitive.MachDeps
-import Data.Vector.Primitive as P
-import Data.Vector.Unboxed as U
 import GHC.Prim
 import GHC.Types
 
 import Data.Primitive.Multi
-import Data.Vector.Unboxed.Packed
 
 data FloatX4 = FX4# FloatX4#
 
@@ -99,18 +96,7 @@ instance Prim FloatX4 where
 unI# :: Int -> Int#
 unI# (I# n#) = n#
 
-instance MultiPrim Float where
-
 newtype instance Multi Float = MultiFloat FloatX4
   deriving (Prim, Num, Show)
 
-instance PackedVector U.Vector Float where
-    unsafeIndexMulti (V_Float (P.Vector i _ arr)) j =
-        indexByteArrayMulti arr (i+j)
-
-instance PackedMVector U.MVector Float where
-    unsafeReadMulti (MV_Float (P.MVector i _ arr)) j =
-        readByteArrayMulti arr (i+j)
-
-    unsafeWriteMulti (MV_Float (P.MVector i _ arr)) j x =
-        writeByteArrayMulti arr (i+j) x
+instance MultiPrim Float where

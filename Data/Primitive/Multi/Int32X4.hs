@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MagicHash #-}
@@ -14,14 +15,11 @@ module Data.Primitive.Multi.Int32X4 (
 
 import Data.Primitive
 import Data.Primitive.MachDeps
-import Data.Vector.Primitive as P
-import Data.Vector.Unboxed as U
 import GHC.Int
 import GHC.Prim
 import GHC.Types
 
 import Data.Primitive.Multi
-import Data.Vector.Unboxed.Packed
 
 data Int32X4 = I32X4# Int32X4#
 
@@ -57,8 +55,8 @@ instance Num Int32X4 where
     signum = mapInt32X4 signum
 
     fromInteger i =
-        let !(I# n#) = fromInteger i
-            v#       = packInt32X4# n# n# n# n#
+        let !(I32# n#) = fromInteger i
+            v#         = packInt32X4# n# n# n# n#
         in
           I32X4# v#
 
@@ -66,15 +64,15 @@ instance Show Int32X4 where
     showsPrec _ (I32X4# v#) =
         let !(# a#, b#, c#, d# #) = unpackInt32X4# v#
         in
-          showString "<" . showv [I# a#, I# b#, I# c#, I# d#]
+          showString "<" . showv [I32# a#, I32# b#, I32# c#, I32# d#]
       where
         showv []       = showString "<>"
         showv [x]      = shows x . showString ">"
         showv (x : xs) = shows x . showString ", " . showv xs
 
 instance Prim Int32X4 where
-    sizeOf# _    = unI# (4*sIZEOF_FLOAT)
-    alignment# _ = unI# (4*sIZEOF_FLOAT)
+    sizeOf# _    = unI# (4*sIZEOF_INT32)
+    alignment# _ = unI# (4*sIZEOF_INT32)
 
     indexByteArray# arr# i# =
         I32X4# (indexInt32X4Array# arr# i#)
@@ -100,18 +98,14 @@ instance Prim Int32X4 where
 unI# :: Int -> Int#
 unI# (I# n#) = n#
 
-instance MultiPrim Int32 where
-
 newtype instance Multi Int32 = MultiInt32 Int32X4
   deriving (Prim, Num, Show)
 
-instance PackedVector U.Vector Int32 where
-    unsafeIndexMulti (V_Int32 (P.Vector i _ arr)) j =
-        indexByteArrayMulti arr (i+j)
+instance MultiPrim Int32 where
 
-instance PackedMVector U.MVector Int32 where
-    unsafeReadMulti (MV_Int32 (P.MVector i _ arr)) j =
-        readByteArrayMulti arr (i+j)
+#if WORD_SIZE_IN_BITS == 32
+newtype instance Multi Int = MultiInt Int32X4
+  deriving (Prim, Num, Show)
 
-    unsafeWriteMulti (MV_Int32 (P.MVector i _ arr)) j x =
-        writeByteArrayMulti arr (i+j) x
+instance MultiPrim Int where
+#endif
