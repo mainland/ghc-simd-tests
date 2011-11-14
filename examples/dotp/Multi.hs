@@ -17,7 +17,7 @@ import GHC.Float
 
 dotp :: U.Vector Float -> U.Vector Float -> Float
 dotp v w =
-    MS.foldl' (+) (+) red 0 $ MS.zipWith (*) (*) v w
+    MS.foldl (+) (+) red 0 $ MS.zipWith (*) (*) v w
   where
     {-# INLINE red #-}
     red :: Multi Float -> Float
