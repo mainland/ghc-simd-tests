@@ -8,6 +8,8 @@
 {-# LANGUAGE UnboxedTuples #-}
 {-# OPTIONS_GHC -W -Werror #-}
 
+#include "MachDeps.h"
+
 module Data.Primitive.Multi.Int32X4 (
     Int32X4(..),
     Multi(..)

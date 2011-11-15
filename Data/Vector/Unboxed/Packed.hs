@@ -6,6 +6,8 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -W -Werror #-}
 
+#include "MachDeps.h"
+
 module Data.Vector.Unboxed.Packed where
 
 import Control.Monad.Primitive
