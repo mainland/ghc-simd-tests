@@ -42,7 +42,7 @@ mmultistream v =
         return Done
 
     step i = do
-      x <- unsafeReadMulti v i
+      x <- unsafeReadAsMulti v i
       return (Yield x (i + m))
 
     {-# INLINE_INNER step1 #-}
@@ -80,7 +80,7 @@ unstreamMax (Stream step s s2s1 step1 _) n = do
     loop v i s = do
         r <- step s
         case r of
-          Yield x s' -> unsafeWriteMulti v i x >> loop v (i+m) s'
+          Yield x s' -> unsafeWriteAsMulti v i x >> loop v (i+m) s'
           Skip    s' -> loop  v i s'
           Done       -> loop1 v i (s2s1 s)
 
@@ -117,7 +117,7 @@ multistream v =
         return Done
 
     step i = do
-      let x = unsafeIndexMulti v i
+      let x = unsafeIndexAsMulti v i
       return $ Yield x (i + m)
 
     {-# INLINE_INNER step1 #-}

@@ -1,5 +1,4 @@
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MagicHash #-}
@@ -8,11 +7,8 @@
 {-# LANGUAGE UnboxedTuples #-}
 {-# OPTIONS_GHC -W -Werror #-}
 
-#include "MachDeps.h"
-
 module Data.Primitive.Multi.Int64X2 (
-    Int64X2(..),
-    Multi(..)
+    Int64X2(..)
   ) where
 
 import Data.Primitive
@@ -20,8 +16,6 @@ import Data.Primitive.MachDeps
 import GHC.Int
 import GHC.Prim
 import GHC.Types
-
-import Data.Primitive.Multi
 
 data Int64X2 = I64X2# Int64X2#
 
@@ -97,15 +91,3 @@ instance Prim Int64X2 where
 
 unI# :: Int -> Int#
 unI# (I# n#) = n#
-
-newtype instance Multi Int64 = MultiInt64 Int64X2
-  deriving (Prim, Num, Show)
-
-instance MultiPrim Int64 where
-
-#if WORD_SIZE_IN_BITS == 64
-newtype instance Multi Int = MultiInt Int64X2
-  deriving (Prim, Num, Show)
-
-instance MultiPrim Int where
-#endif

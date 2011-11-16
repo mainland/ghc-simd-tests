@@ -9,7 +9,7 @@ module MultiLazy (
 import qualified Data.Vector.Generic.MultiStream as MS
 import qualified Data.Vector.Unboxed as U
 
-import Data.Primitive.Multi.Int32X4
+import Data.Primitive.Multi
 import GHC.Int
 import GHC.Prim
 

@@ -8,16 +8,13 @@
 {-# OPTIONS_GHC -W -Werror #-}
 
 module Data.Primitive.Multi.FloatX4 (
-    FloatX4(..),
-    Multi(..)
+    FloatX4(..)
   ) where
 
 import Data.Primitive
 import Data.Primitive.MachDeps
 import GHC.Prim
 import GHC.Types
-
-import Data.Primitive.Multi
 
 data FloatX4 = FX4# FloatX4#
 
@@ -95,8 +92,3 @@ instance Prim FloatX4 where
 
 unI# :: Int -> Int#
 unI# (I# n#) = n#
-
-newtype instance Multi Float = MultiFloat FloatX4
-  deriving (Prim, Num, Show)
-
-instance MultiPrim Float where

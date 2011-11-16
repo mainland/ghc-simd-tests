@@ -9,7 +9,6 @@ module Hand (
   ) where
 
 import Data.Primitive.Multi
-import Data.Primitive.Multi.FloatX4
 import qualified Data.Vector.Unboxed as U
 import Data.Vector.Unboxed.Packed
 import GHC.Prim
@@ -20,7 +19,7 @@ dotp u v | U.length u /= U.length v =
     error "dotp: vectors of different lengths"
 
 dotp u v =
-    loop 0 0
+    n `seq` k `seq` m `seq` loop 0 0
   where
     m :: Int
     m = multiplicity (undefined :: Multi Float)
@@ -38,8 +37,8 @@ dotp u v =
         loop (z + x*y) (i+4)
       where
         x, y :: Multi Float
-        x = unsafeIndexMulti u i
-        y = unsafeIndexMulti v i
+        x = unsafeIndexAsMulti u i
+        y = unsafeIndexAsMulti v i
 
     loop1 :: Float -> Int -> Float
     {-# INLINE loop1 #-}

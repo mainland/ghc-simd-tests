@@ -9,7 +9,7 @@ module MultiStrict (
 import qualified Data.Vector.Generic.MultiStream as MS
 import qualified Data.Vector.Unboxed as U
 
-import Data.Primitive.Multi.FloatX4
+import Data.Primitive.Multi
 import GHC.Float
 import GHC.Prim
 

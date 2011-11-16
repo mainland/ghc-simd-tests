@@ -8,16 +8,13 @@
 {-# OPTIONS_GHC -W -Werror #-}
 
 module Data.Primitive.Multi.DoubleX2 (
-    DoubleX2(..),
-    Multi(..)
+    DoubleX2(..)
   ) where
 
 import Data.Primitive
 import Data.Primitive.MachDeps
 import GHC.Prim
 import GHC.Types
-
-import Data.Primitive.Multi
 
 data DoubleX2 = DX2# DoubleX2#
 
@@ -93,8 +90,3 @@ instance Prim DoubleX2 where
 
 unI# :: Int -> Int#
 unI# (I# n#) = n#
-
-newtype instance Multi Double = MultiDouble DoubleX2
-  deriving (Prim, Num, Show)
-
-instance MultiPrim Double where

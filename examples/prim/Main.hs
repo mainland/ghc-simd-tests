@@ -17,6 +17,7 @@ main = do
     print $ FX4# (bar 0.0 v# 0.0)
     let g = bar 0.0
     print $ FX4# (g v# 0.0)
+    print $ FX4# (app (\x -> x) v#)
   where
     !v# = packFloatX4# 1.0# 2.0# 3.0# 4.0#
 
@@ -29,3 +30,7 @@ bar :: Float -> FloatX4# -> Double -> FloatX4#
 bar _ x _ =
     case x of
       _ -> x
+
+app :: (FloatX4# -> FloatX4#) -> FloatX4# -> FloatX4#
+{-# NOINLINE app #-}
+app f x = f x
