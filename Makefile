@@ -16,7 +16,7 @@ GHCCOREFLAGS+=-dsuppress-idinfo
 GHCCOREFLAGS+=-dsuppress-module-prefixes 
 GHCCOREFLAGS+=-dsuppress-type-applications
 
-EXAMPLES = sum intsum dotp prim
+EXAMPLES = sum intsum dotp prim roman
 EXAMPLEINCS = $(foreach EXAMPLE,$(EXAMPLES),-iexamples/$(EXAMPLE))
 
 .PHONY : all
