@@ -7,12 +7,17 @@
 {-# LANGUAGE UnboxedTuples #-}
 -- {-# OPTIONS_GHC -W -Werror #-}
 
+#include "MachDeps.h"
+
 module Main where
 
 import Prelude hiding (map, zipWith, foldl)
 
 import Data.Primitive.Multi
 import Data.Primitive.Multi.FloatX4
+import Data.Primitive.Multi.DoubleX2
+import Data.Primitive.Multi.Int32X4
+import Data.Primitive.Multi.Int64X2
 import qualified Data.Vector.Unboxed as U
 import Data.Vector.Unboxed.Packed
 import qualified Data.Vector.Generic as G1
@@ -20,81 +25,102 @@ import qualified Data.Vector.Generic.New as GN
 import qualified Data.Vector.Fusion.Stream.Monadic as S
 import qualified Data.Vector.Generic.MultiStream as G
 import qualified Data.Vector.Fusion.MultiStream.Monadic as MS
-
 import GHC.Float
+import GHC.Int
 import GHC.Prim
 import GHC.Types
 
+#if WORD_SIZE_IN_BITS < 64
+import GHC.IntWord64
+#endif
+
 import Util
-
-{-# RULES
-
-"multistream/unstream" forall (x :: forall v . G1.Vector v Float => v Float) .
-  G.multistream (G1.new (GN.unstream x)) = adaptMultiFloat x
-
-  #-}
 
 main :: IO ()
 main = do
-    timeComp (\_ -> return $ sumFrom1To mx)
-       (\x -> "   Multi lazy: " ++ show x)
+    timeComp (\_ -> return $ sumFloat vf)
+       (\x -> "       Float: " ++ show x)
+    timeComp (\_ -> return $ sumMultiFloat vf)
+       (\x -> " Multi Float: " ++ show x)
+
+    timeComp (\_ -> return $ sumDouble vd)
+       (\x -> "      Double: " ++ show x)
+    timeComp (\_ -> return $ sumMultiDouble vd)
+       (\x -> "Multi Double: " ++ show x)
+
+    timeComp (\_ -> return $ sumInt32 vi32)
+       (\x -> "       Int32: " ++ show x)
+    timeComp (\_ -> return $ sumMultiInt32 vi32)
+       (\x -> " Multi Int32: " ++ show x)
+
+    timeComp (\_ -> return $ sumInt64 vi64)
+       (\x -> "       Int64: " ++ show x)
+    timeComp (\_ -> return $ sumMultiInt64 vi64)
+       (\x -> " Multi Int64: " ++ show x)
   where
-    mx :: Float
+    mx :: Num a => a
     mx = 10000000
 
-sumFrom1To :: Float -> Float
-sumFrom1To mx = G.foldl' (+) (+) red 0 v
-  where
-    v :: U.Vector Float
-    v = U.enumFromTo 1 mx
+    vf :: U.Vector Float
+    !vf = U.enumFromTo 1 mx
 
+    vd :: U.Vector Double
+    !vd = U.enumFromTo 1 mx
+
+    vi32 :: U.Vector Int32
+    !vi32 = U.enumFromTo 1 mx
+
+    vi64 :: U.Vector Int64
+    !vi64 = U.enumFromTo 1 mx
+
+sumFloat :: U.Vector Float -> Float
+sumFloat v = G1.foldl' (+) 0 v
+
+sumMultiFloat :: U.Vector Float -> Float
+sumMultiFloat v = G.foldl' (+) (+) red 0 v
+  where
     red :: Multi Float -> Float
     red (MultiFloat (FX4# fv)) =
         let !(# a, b, c, d #) = unpackFloatX4# fv
         in
           F# (a `plusFloat#` b `plusFloat#` c `plusFloat#` d)
 
-adaptMultiFloat :: forall m . Monad m
-                => S.Stream m Float
-                -> MS.Stream m Float
-adaptMultiFloat (S.Stream step (s :: s) sz) =
-    MS.Stream step' (s, 0, 0) id step1' sz
+sumDouble :: U.Vector Double -> Double
+sumDouble v = G1.foldl' (+) 0 v
+
+sumMultiDouble :: U.Vector Double -> Double
+sumMultiDouble v = G.foldl' (+) (+) red 0 v
   where
-    step' :: (s, Int, Multi Float)
-          -> m (MS.Step (s, Int, Multi Float) (Multi Float))
-    step' (s, i@(I# i#), v@(MultiFloat (FX4# v#))) = do
-        r <- step s
-        case r of
-          S.Yield !(F# f#) s' ->
-              let !v'# = insertFloatX4# v# f# i#
-                  v' = MultiFloat (FX4# v'#)
-              in
-                return $ if i == 3
-                         then MS.Yield v' (s', 0, v')
-                         else MS.Skip     (s', i + 1, v')
-          S.Skip s' -> return $ MS.Skip (s', i, v)
-          S.Done    -> return $ MS.Done
-
-    step1' :: (s, Int, Multi Float)
-           -> m (MS.Step (s, Int, Multi Float) Float)
-    step1' (s, 3, v@(MultiFloat (FX4# v#))) =
-        let! (# _, _, x, _ #) = unpackFloatX4# v#
+    red :: Multi Double -> Double
+    red (MultiDouble (DX2# fv)) =
+        let !(# a, b #) = unpackDoubleX2# fv
         in
-          return $ MS.Yield (F# x) (s, 2, v)
+          D# (a +## b)
 
-    step1' (s, 2, v@(MultiFloat (FX4# v#))) =
-        let! (# _, x, _, _ #) = unpackFloatX4# v#
+sumInt32 :: U.Vector Int32 -> Int32
+sumInt32 v = G1.foldl' (+) 0 v
+
+sumMultiInt32 :: U.Vector Int32 -> Int32
+sumMultiInt32 v = G.foldl' (+) (+) red 0 v
+  where
+    red :: Multi Int32 -> Int32
+    red (MultiInt32 (I32X4# v)) =
+        let !(# a, b, c, d #) = unpackInt32X4# v
         in
-          return $ MS.Yield (F# x) (s, 1, v)
+          I32# (a +# b +# c +# d)
 
-    step1' (s, 1, v@(MultiFloat (FX4# v#))) =
-        let! (# x, _, _, _ #) = unpackFloatX4# v#
+sumInt64 :: U.Vector Int64 -> Int64
+sumInt64 v = G1.foldl' (+) 0 v
+
+sumMultiInt64 :: U.Vector Int64 -> Int64
+sumMultiInt64 v = G.foldl' (+) (+) red 0 v
+  where
+    red :: Multi Int64 -> Int64
+    red (MultiInt64 (I64X2# v)) =
+        let !(# a, b #) = unpackInt64X2# v
         in
-          return $ MS.Yield (F# x) (s, 0, v)
-
-    step1' (s, 0, v) = do
-        r <- step s
-        case r of
-          S.Yield x s' -> return $ MS.Yield x (s', 0, v)
-          S.Skip    s' -> return $ MS.Skip    (s', 0, v)
-          S.Done       -> return $ MS.Done
+#if WORD_SIZE_IN_BITS < 64
+          I64# (a `plusInt64#` b)
+#else
+          I64# (a +# b)
+#endif
