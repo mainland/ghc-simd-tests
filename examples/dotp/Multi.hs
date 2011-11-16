@@ -17,11 +17,4 @@ import GHC.Float
 
 dotp :: U.Vector Float -> U.Vector Float -> Float
 dotp v w =
-    MS.foldl (+) (+) red 0 $ MS.zipWith (*) (*) v w
-  where
-    {-# INLINE red #-}
-    red :: Multi Float -> Float
-    red (MultiFloat (FX4# fv)) =
-        let !(# a, b, c, d #) = unpackFloatX4# fv
-        in
-          F# (a `plusFloat#` b `plusFloat#` c `plusFloat#` d)
+    MS.foldl (+) (+) (multifold (+) 0) 0 $ MS.zipWith (*) (*) v w

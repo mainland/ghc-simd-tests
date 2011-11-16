@@ -66,6 +66,10 @@ class (Prim a, Prim (Multi a)) => MultiPrim a where
     multiplicity _ = I# (sizeOf# (undefined :: Multi a)) `quot`
                      I# (sizeOf# (undefined :: a))
 
+    multimap  :: (a -> a) -> Multi a -> Multi a
+
+    multifold :: (b -> a -> b) -> b -> Multi a -> b
+
     -- | Read a multi-value from the array. The offset is in elements of type
     -- @a@ rather than in elements of type @Multi a@.
     indexByteArrayAsMulti# :: ByteArray# -> Int# -> Multi a
@@ -104,7 +108,7 @@ instance MultiPrim ty where {                                                 \
 ; indexOffAddrAsMulti# addr# i# = mctr (ctr (idx_addr addr# i#))              \
 ; readOffAddrAsMulti#  addr# i# s# = case rd_addr addr# i# s# of              \
                         { (# s1#, x# #) -> (# s1#, mctr (ctr x#) #) }         \
-; writeOffAddrAsMulti# addr# i# (mctr (ctr x#)) s# = wr_addr addr# i# x# s#   }
+; writeOffAddrAsMulti# addr# i# (mctr (ctr x#)) s# = wr_addr addr# i# x# s#
 
 deriveMultiPrim(Float, MultiFloat, FX4#,
                 indexFloatArrayAsFloatX4#,
@@ -113,6 +117,20 @@ deriveMultiPrim(Float, MultiFloat, FX4#,
                 indexFloatOffAddrAsFloatX4#,
                 readFloatOffAddrAsFloatX4#,
                 writeFloatOffAddrAsFloatX4#)
+;  multimap f (MultiFloat (FX4# v#)) =
+    let !(# w#, x#, y#, z# #) = unpackFloatX4# v#
+        !(F# w'#)             = f (F# w#)
+        !(F# x'#)             = f (F# x#)
+        !(F# y'#)             = f (F# y#)
+        !(F# z'#)             = f (F# z#)
+        !v'#                  = packFloatX4# w'# x'# y'# z'#
+    in
+      MultiFloat (FX4# v'#)
+;  multifold f z (MultiFloat (FX4# v#)) =
+    let !(# w#, x#, y#, z# #) = unpackFloatX4# v#
+    in
+      (((z `f` (F# w#)) `f` (F# x#)) `f` (F# y#)) `f` (F# z#)
+}
 
 deriveMultiPrim(Double, MultiDouble, DX2#,
                 indexDoubleArrayAsDoubleX2#,
@@ -121,6 +139,18 @@ deriveMultiPrim(Double, MultiDouble, DX2#,
                 indexDoubleOffAddrAsDoubleX2#,
                 readDoubleOffAddrAsDoubleX2#,
                 writeDoubleOffAddrAsDoubleX2#)
+; multimap f (MultiDouble (DX2# v#)) =
+    let !(# x#, y# #) = unpackDoubleX2# v#
+        !(D# x'#)             = f (D# x#)
+        !(D# y'#)             = f (D# y#)
+        !v'#                  = packDoubleX2# x'# y'#
+    in
+      MultiDouble (DX2# v'#)
+; multifold f z (MultiDouble (DX2# v#)) =
+    let !(# x#, y# #) = unpackDoubleX2# v#
+    in
+      (z `f` (D# x#)) `f` (D# y#)
+}
 
 deriveMultiPrim(Int32, MultiInt32, I32X4#,
                 indexInt32ArrayAsInt32X4#,
@@ -129,6 +159,20 @@ deriveMultiPrim(Int32, MultiInt32, I32X4#,
                 indexInt32OffAddrAsInt32X4#,
                 readInt32OffAddrAsInt32X4#,
                 writeInt32OffAddrAsInt32X4#)
+;  multimap f (MultiInt32 (I32X4# v#)) =
+    let !(# w#, x#, y#, z# #) = unpackInt32X4# v#
+        !(I32# w'#)           = f (I32# w#)
+        !(I32# x'#)           = f (I32# x#)
+        !(I32# y'#)           = f (I32# y#)
+        !(I32# z'#)           = f (I32# z#)
+        !v'#                  = packInt32X4# w'# x'# y'# z'#
+    in
+      MultiInt32 (I32X4# v'#)
+;  multifold f z (MultiInt32 (I32X4# v#)) =
+    let !(# w#, x#, y#, z# #) = unpackInt32X4# v#
+    in
+      (((z `f` (I32# w#)) `f` (I32# x#)) `f` (I32# y#)) `f` (I32# z#)
+}
 
 deriveMultiPrim(Int64, MultiInt64, I64X2#,
                 indexInt64ArrayAsInt64X2#,
@@ -137,6 +181,18 @@ deriveMultiPrim(Int64, MultiInt64, I64X2#,
                 indexInt64OffAddrAsInt64X2#,
                 readInt64OffAddrAsInt64X2#,
                 writeInt64OffAddrAsInt64X2#)
+; multimap f (MultiInt64 (I64X2# v#)) =
+    let !(# x#, y# #) = unpackInt64X2# v#
+        !(I64# x'#)   = f (I64# x#)
+        !(I64# y'#)   = f (I64# y#)
+        !v'#          = packInt64X2# x'# y'#
+    in
+      MultiInt64 (I64X2# v'#)
+; multifold f z (MultiInt64 (I64X2# v#)) =
+    let !(# x#, y# #) = unpackInt64X2# v#
+    in
+      (z `f` (I64# x#)) `f` (I64# y#)
+}
 
 #if WORD_SIZE_IN_BITS == 32
 deriveMultiPrim(Int, MultiInt, I32X4#,
@@ -146,6 +202,20 @@ deriveMultiPrim(Int, MultiInt, I32X4#,
                 indexInt32OffAddrAsInt32X4#,
                 readInt32OffAddrAsInt32X4#,
                 writeInt32OffAddrAsInt32X4#)
+;  multimap f (MultiInt (I32X4# v#)) =
+    let !(# w#, x#, y#, z# #) = unpackInt32X4# v#
+        !(I# w'#)             = f (I# w#)
+        !(I# x'#)             = f (I# x#)
+        !(I# y'#)             = f (I# y#)
+        !(I# z'#)             = f (I# z#)
+        !v'#                  = packInt32X4# w'# x'# y'# z'#
+    in
+      MultiInt (I32X4# v'#)
+;  multifold f z (MultiInt (I32X4# v#)) =
+    let !(# w#, x#, y#, z# #) = unpackInt32X4# v#
+    in
+      (((z `f` (I# w#)) `f` (I# x#)) `f` (I# y#)) `f` (I# z#)
+}
 #elif WORD_SIZE_IN_BITS == 64
 deriveMultiPrim(Int, MultiInt, I64X2#,
                 indexInt64ArrayAsInt64X2#,
@@ -154,6 +224,18 @@ deriveMultiPrim(Int, MultiInt, I64X2#,
                 indexInt64OffAddrAsInt64X2#,
                 readInt64OffAddrAsInt64X2#,
                 writeInt64OffAddrAsInt64X2#)
+; multimap f (MultiInt (I64X2# v#)) =
+    let !(# x#, y# #) = unpackInt64X2# v#
+        !(I# x'#)     = f (I# x#)
+        !(I# y'#)     = f (I# y#)
+        !v'#          = packInt64X2# x'# y'#
+    in
+      MultiInt (I64X2# v'#)
+; multifold f z (MultiInt (I64X2# v#)) =
+    let !(# x#, y# #) = unpackInt64X2# v#
+    in
+      (z `f` (I# x#)) `f` (I# y#)
+}
 #endif
 
 -- | Read a primitive multi-value from the byte array. The offset is given in
