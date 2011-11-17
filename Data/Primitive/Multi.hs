@@ -66,6 +66,8 @@ class (Prim a, Prim (Multi a)) => MultiPrim a where
     multiplicity _ = I# (sizeOf# (undefined :: Multi a)) `quot`
                      I# (sizeOf# (undefined :: a))
 
+    multireplicate  :: a -> Multi a
+
     multimap  :: (a -> a) -> Multi a -> Multi a
 
     multifold :: (b -> a -> b) -> b -> Multi a -> b
@@ -117,6 +119,8 @@ deriveMultiPrim(Float, MultiFloat, FX4#,
                 indexFloatOffAddrAsFloatX4#,
                 readFloatOffAddrAsFloatX4#,
                 writeFloatOffAddrAsFloatX4#)
+;  multireplicate (F# x#) =
+    MultiFloat (FX4# (packFloatX4# x# x# x# x#))
 ;  multimap f (MultiFloat (FX4# v#)) =
     let !(# w#, x#, y#, z# #) = unpackFloatX4# v#
         !(F# w'#)             = f (F# w#)
@@ -139,6 +143,8 @@ deriveMultiPrim(Double, MultiDouble, DX2#,
                 indexDoubleOffAddrAsDoubleX2#,
                 readDoubleOffAddrAsDoubleX2#,
                 writeDoubleOffAddrAsDoubleX2#)
+;  multireplicate (D# x#) =
+    MultiDouble (DX2# (packDoubleX2# x# x#))
 ; multimap f (MultiDouble (DX2# v#)) =
     let !(# x#, y# #) = unpackDoubleX2# v#
         !(D# x'#)             = f (D# x#)
@@ -159,6 +165,8 @@ deriveMultiPrim(Int32, MultiInt32, I32X4#,
                 indexInt32OffAddrAsInt32X4#,
                 readInt32OffAddrAsInt32X4#,
                 writeInt32OffAddrAsInt32X4#)
+;  multireplicate (I32# x#) =
+    MultiInt32 (I32X4# (packInt32X4# x# x# x# x#))
 ;  multimap f (MultiInt32 (I32X4# v#)) =
     let !(# w#, x#, y#, z# #) = unpackInt32X4# v#
         !(I32# w'#)           = f (I32# w#)
@@ -181,6 +189,8 @@ deriveMultiPrim(Int64, MultiInt64, I64X2#,
                 indexInt64OffAddrAsInt64X2#,
                 readInt64OffAddrAsInt64X2#,
                 writeInt64OffAddrAsInt64X2#)
+;  multireplicate (I64# x#) =
+    MultiInt64 (I64X2# (packInt64X2# x# x#))
 ; multimap f (MultiInt64 (I64X2# v#)) =
     let !(# x#, y# #) = unpackInt64X2# v#
         !(I64# x'#)   = f (I64# x#)
@@ -202,6 +212,8 @@ deriveMultiPrim(Int, MultiInt, I32X4#,
                 indexInt32OffAddrAsInt32X4#,
                 readInt32OffAddrAsInt32X4#,
                 writeInt32OffAddrAsInt32X4#)
+;  multireplicate (I# x#) =
+    MultiInt (I32X4# (packInt32X4# x# x# x# x#))
 ;  multimap f (MultiInt (I32X4# v#)) =
     let !(# w#, x#, y#, z# #) = unpackInt32X4# v#
         !(I# w'#)             = f (I# w#)
@@ -224,6 +236,8 @@ deriveMultiPrim(Int, MultiInt, I64X2#,
                 indexInt64OffAddrAsInt64X2#,
                 readInt64OffAddrAsInt64X2#,
                 writeInt64OffAddrAsInt64X2#)
+;  multireplicate (I# x#) =
+    MultiInt (I64X2# (packInt64X2# x# x#))
 ; multimap f (MultiInt (I64X2# v#)) =
     let !(# x#, y# #) = unpackInt64X2# v#
         !(I# x'#)     = f (I# x#)
