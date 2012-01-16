@@ -34,8 +34,8 @@ main = do
     timeComp (\_ -> return $ MultiStrict.sumFrom1To v)
        (\x -> " Multi strict: " ++ show x)
   where
-    mx :: Int32
+    mx :: Int64
     mx = 10000000
 
-    v :: U.Vector Int32
+    v :: U.Vector Int64
     !v = U.enumFromTo 1 mx
