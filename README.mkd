@@ -1,3 +1,11 @@
 The source code here requires a version of ghc built from the simd
 branch. Vectors primops only work when compiling with -fllvm. You will also need
-to patch the vector library to expose some additional data constructors.
+to patch the vector library (see patches/vector.patch) to expose some additional
+data constructors.
+
+Unfortunately, Win32 requires a patch to LLVM. This is due to the fact that the
+stack is only 4-byte aligned on Win32, causing LLVM to 1) insert extra
+prologue/epilogue code to align the stack, and 2) disable tail calls. The patch
+makes LLVM think 128-bit SSE registers only need to be 4-byte aligned. GHC's
+LLVM mangler also rewrites movaps instructions (for register spills) to movups
+instructions (only on Win32).

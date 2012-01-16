@@ -1,0 +1,25 @@
+diff --git a/lib/Target/X86/X86RegisterInfo.td b/lib/Target/X86/X86RegisterInfo.td
+index 9a7db36..16f1346 100644
+--- a/lib/Target/X86/X86RegisterInfo.td
++++ b/lib/Target/X86/X86RegisterInfo.td
+@@ -458,7 +458,7 @@ def RST : RegisterClass<"X86", [f80, f64, f32], 32, (sequence "ST%u", 0, 7)> {
+ // Generic vector registers: VR64 and VR128.
+ def VR64: RegisterClass<"X86", [x86mmx], 64, (sequence "MM%u", 0, 7)>;
+ def VR128 : RegisterClass<"X86", [v16i8, v8i16, v4i32, v2i64, v4f32, v2f64],
+-                          128, (add FR32)> {
++                          32, (add FR32)> {
+   let SubRegClasses = [(FR32 sub_ss), (FR64 sub_sd)];
+ }
+ 
+diff --git a/lib/Target/X86/X86TargetMachine.cpp b/lib/Target/X86/X86TargetMachine.cpp
+index 15c6c4e..05d7f96 100644
+--- a/lib/Target/X86/X86TargetMachine.cpp
++++ b/lib/Target/X86/X86TargetMachine.cpp
+@@ -39,6 +39,7 @@ X86_32TargetMachine::X86_32TargetMachine(const Target &T, StringRef TT,
+                (getSubtargetImpl()->isTargetCygMing() ||
+                 getSubtargetImpl()->isTargetWindows()) ?
+                "e-p:32:32-f64:64:64-i64:64:64-f80:32:32-f128:128:128-"
++               "v128:32:32-"
+                "n8:16:32-S32" :
+                "e-p:32:32-f64:32:64-i64:32:64-f80:32:32-f128:128:128-"
+                "n8:16:32-S128"),

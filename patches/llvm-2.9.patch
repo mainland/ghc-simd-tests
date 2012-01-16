@@ -1,0 +1,27 @@
+diff --git a/lib/Target/X86/X86RegisterInfo.td b/lib/Target/X86/X86RegisterInfo.td
+index 612fac2..9549ebe 100644
+--- a/lib/Target/X86/X86RegisterInfo.td
++++ b/lib/Target/X86/X86RegisterInfo.td
+@@ -792,7 +792,7 @@ def RST : RegisterClass<"X86", [f80, f64, f32], 32,
+ // Generic vector registers: VR64 and VR128.
+ def VR64: RegisterClass<"X86", [x86mmx], 64,
+                           [MM0, MM1, MM2, MM3, MM4, MM5, MM6, MM7]>;
+-def VR128 : RegisterClass<"X86", [v16i8, v8i16, v4i32, v2i64, v4f32, v2f64],128,
++def VR128 : RegisterClass<"X86", [v16i8, v8i16, v4i32, v2i64, v4f32, v2f64],32,
+                           [XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7,
+                            XMM8, XMM9, XMM10, XMM11,
+                            XMM12, XMM13, XMM14, XMM15]> {
+diff --git a/lib/Target/X86/X86TargetMachine.cpp b/lib/Target/X86/X86TargetMachine.cpp
+index 8fb9470..671a2e4 100644
+--- a/lib/Target/X86/X86TargetMachine.cpp
++++ b/lib/Target/X86/X86TargetMachine.cpp
+@@ -99,7 +99,8 @@ X86_32TargetMachine::X86_32TargetMachine(const Target &T, const std::string &TT,
+                "e-p:32:32-f64:32:64-i64:32:64-f80:128:128-f128:128:128-n8:16:32" :
+                (getSubtargetImpl()->isTargetCygMing() ||
+                 getSubtargetImpl()->isTargetWindows()) ?
+-               "e-p:32:32-f64:64:64-i64:64:64-f80:32:32-f128:128:128-n8:16:32" :
++               "e-p:32:32-f64:64:64-i64:64:64-f80:32:32-f128:128:128-n8:16:32-"
++               "v128:32:32" :
+                "e-p:32:32-f64:32:64-i64:32:64-f80:32:32-f128:128:128-n8:16:32"),
+     InstrInfo(*this),
+     TSInfo(*this),
