@@ -3,18 +3,32 @@ LLVMOPT = opt
 LLVMLLC = llc
 
 GHCFLAGS=-O2 -fllvm -Iinclude -dcore-lint
+GHCFLAGS+=-pgmlo=$(LLVMOPT) -pgmlc=$(LLVMLLC)
+
+GHCFLAGS+=-debug -rtsopts=all
+#GHCFLAGS+=-keep-llvm-file
+#GHCFLAGS+=-keep-s-file
+#GHCFLAGS+=-keep-tmp-files
 #GHCFLAGS+=-fmax-simplifier-iterations=10
 
-GHCCOREFLAGS+=-ddump-simpl
-GHCCOREFLAGS+=-ddump-simpl-iterations
+GHCFLAGS+=-ddump-to-file
+#GHCFLAGS+=-ddump-cmm
+#GHCFLAGS+=-ddump-simpl
+#GHCFLAGS+=-ddump-simpl-iterations
+#GHCFLAGS+=-ddump-simpl-stats
+#GHCFLAGS+=-ddump-stg
 
-GHCCOREFLAGS+=-ddump-rule-firings
-GHCCOREFLAGS+=-ddump-rule-rewrites
+#GHCCOREFLAGS+=-ddump-occur-anal
+#GHCCOREFLAGS+=-ddump-rule-firings
+#GHCCOREFLAGS+=-ddump-rule-rewrites
+#GHCCOREFLAGS+=-ddump-simpl
+#GHCCOREFLAGS+=-ddump-simpl-iterations
+#GHCCOREFLAGS+=-ddump-simpl-stats
 
-GHCCOREFLAGS+=-dsuppress-coercions
-GHCCOREFLAGS+=-dsuppress-idinfo
-GHCCOREFLAGS+=-dsuppress-module-prefixes 
-GHCCOREFLAGS+=-dsuppress-type-applications
+#GHCCOREFLAGS+=-dsuppress-coercions
+#GHCCOREFLAGS+=-dsuppress-idinfo
+#GHCCOREFLAGS+=-dsuppress-module-prefixes 
+#GHCCOREFLAGS+=-dsuppress-type-applications
 
 EXAMPLES = sum intsum dotp saxpy prim roman
 EXAMPLEINCS = $(foreach EXAMPLE,$(EXAMPLES),-iexamples/$(EXAMPLE))
@@ -26,6 +40,9 @@ all : $(EXAMPLES)
 clean :
 	rm -rf obj
 	rm -rf $(EXAMPLES)
+	find . -name '*.s' | xargs rm -f
+	find . -name '*.ll' | xargs rm -f
+	find . -name '*.dump-*' | xargs rm -f
 
 % : examples/%/Main.hs
 	$(GHC) $(GHCFLAGS) --make -odir obj/$* -hidir obj/$* -iexamples/$* -o $@ $<
