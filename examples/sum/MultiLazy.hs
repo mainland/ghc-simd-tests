@@ -13,8 +13,6 @@ import Data.Primitive.Multi
 import GHC.Float
 import GHC.Prim
 
-import Adapt
-
 sumFrom1To :: Float -> Float
 sumFrom1To mx = MS.foldl' (+) (+) red 0 v
   where
