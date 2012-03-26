@@ -1,11 +1,29 @@
 The source code here requires a version of ghc built from the simd
-branch. Vectors primops only work when compiling with -fllvm. You will also need
-to patch the vector library (see patches/vector.patch) to expose some additional
-data constructors.
+branch. Vectors primops only work when compiling with `-fllvm`. You will also
+need to patched version of the `dph` and `vector` libraries. Here are the steps
+to get the SIMD branch up and running.
 
-Unfortunately, Win32 requires a patch to LLVM. This is due to the fact that the
-stack is only 4-byte aligned on Win32, causing LLVM to 1) insert extra
-prologue/epilogue code to align the stack, and 2) disable tail calls. The patch
-makes LLVM think 128-bit SSE registers only need to be 4-byte aligned. GHC's
-LLVM mangler also rewrites movaps instructions (for register spills) to movups
-instructions (only on Win32).
+1. Set up a ghc tree as you normally would. See the [GHC wiki](http://hackage.haskell.org/trac/ghc/wiki/Building/GettingTheSources) for instructions on how to get the GHC sources.
+
+1. Replace `libraries/dph` with the `simd` branch checked out from `git@github.com:mainland/dph.git`.
+
+1. Replace `libraries/vector` with the `simd` branch checked out from `git@github.com:mainland/vector.git`.
+
+1. Use the fingerprint script to restore your repository state to the hashes
+recorded in the `simd.fp` file in this repository:
+
+        ./utils/fingerprint/fingerprint.py restore -f simd.fp
+
+1. Configure and build as you would normally (see the [GHC
+wiki](http://hackage.haskell.org/trac/ghc/wiki/Building) again).
+
+## Windows
+
+Unfortunately, Win32 requires a patch to LLVM due to the fact that the stack is
+only 4-byte aligned on Win32, causing LLVM to 1) insert extra prologue/epilogue
+code to align the stack, and 2) disable tail calls. The patch tricks LLVM into
+thinking 128-bit SSE registers only need to be 4-byte aligned. GHC's LLVM
+mangler then rewrites all movaps instructions (for register spills) to movups
+instructions (only on Win32) so that SSE registers really *do* only have to be
+4-byte aligned :) The patch is in the `patches` directory,
+[here](patches/llvm-3.0.patch).
