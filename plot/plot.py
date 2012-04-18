@@ -3,6 +3,7 @@ import logging
 
 import matplotlib.mlab as mlab
 from matplotlib.pyplot import *
+import itertools
 import numpy as np
 from optparse import OptionParser
 import plotprefs
@@ -50,15 +51,15 @@ def main():
         plotBench('dotp', data, plotMulti=True)
         savefig(opts.dotp, dpi=144)
 
-    if True:
+    if False:
         plotBench('sum', data, plotMulti=True)
         show()
         
-    if False:
+    if True:
         plotBench('dotp', data, plotMulti=True)
         show()
         
-    if True:
+    if False:
         print"Sum"
         r = selectN(data, 'sum', 16777216)
         for i in r:
@@ -82,63 +83,35 @@ def plotBench(func, data, plotMulti=False, plotAlt=False):
 
     MARKERSIZE=10
 
-    r = selectVariant(data, func, 'scalar')
-    errorbar(r.n, r.tmean*1000.0,
-             fmt='r+-',
-             markersize=MARKERSIZE,
-             label='Scalar')
-    
-    r = selectVariant(data, func, 'cscalar')
-    errorbar(r.n, r.tmean*1000.0,
-             fmt='b--',
-             markersize=MARKERSIZE,
-             label='Scalar (C)')
-    
-    r = selectVariant(data, func, 'manual')
-    errorbar(r.n, r.tmean*1000.0,
-             fmt='r.-',
-             markersize=MARKERSIZE,
-             label='Manual')
-    
-    r = selectVariant(data, func, 'cmanual')
-    errorbar(r.n, r.tmean*1000.0,
-             fmt='b1--',
-             markersize=MARKERSIZE,
-             label='Manual (C)')
-    
-    r = selectVariant(data, func, 'vector')
-    errorbar(r.n, r.tmean*1000.0,
-             fmt='g2:',
-             markersize=MARKERSIZE,
-             label='vector')
+    CS = itertools.cycle(plotprefs.sane)
+    MS = itertools.cycle(['+', '',  '.', '1',   '2'])
+    LS = itertools.cycle(['-', '--', '-', '--', ':'])
+
+    sets = [('scalar', 'Scalar'),
+            ('cscalar', 'Scalar (C)'),
+            ('manual', 'Manual'),
+            ('cmanual', 'Manual (C)'),
+            ('vector', 'vector')]
     
     if plotMulti:
-        r = selectVariant(data, func, 'multivector')
-        errorbar(r.n, r.tmean*1000.0,
-                 fmt='k-',
-                 markersize=MARKERSIZE,
-                 label='multivector')
+        sets += [('multivector', 'multivector')]
     
     if plotAlt:
-        r = selectVariant(data, func, 'vectoralt1')
-        errorbar(r.n, r.tmean*1000.0,
-                 fmt='r.-.',
-                 markersize=MARKERSIZE,
-                 label='vector (alt 1)')
-        
-        r = selectVariant(data, func, 'vectoralt2')
-        errorbar(r.n, r.tmean*1000.0,
-                 fmt='g.-.',
-                 markersize=MARKERSIZE,
-                 label='vector (alt 2)')
-        
-        r = selectVariant(data, func, 'vectoralt3')
-        errorbar(r.n, r.tmean*1000.0,
-                 fmt='b.-',
-                 markersize=MARKERSIZE,
-                 label='vector (alt 3)')
+        sets += [('vectoralt1', 'vector (alt 1)'),
+                 ('vectoralt2', 'vector (alt 2)'),
+                 ('vectoralt3', 'vector (alt 3)'),
+                 ('vectoralt4', 'vector (alt 4)'),
+                 ]
 
-        
+    for (f, label) in sets:
+        r = selectVariant(data, func, f)
+        errorbar(r.n, r.tmean*1000.0,
+                 color=CS.next(),
+                 marker=MS.next(),
+                 linestyle=LS.next(),
+                 markersize=MARKERSIZE,
+                 label=label)
+
     legend(loc='upper left', numpoints=1)
     xlabel('Vector size')
     ylabel('Time (ms)')

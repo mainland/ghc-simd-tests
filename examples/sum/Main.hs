@@ -6,11 +6,8 @@ module Main where
 
 import Control.Exception (evaluate)
 import Data.Array.Parallel
-import Data.Array.Parallel.Array
-import "dph-lifted-vseg" Data.Array.Parallel.PArray (nf, fromUArray)
-import "dph-prim-par" Data.Array.Parallel.Unlifted
+import Data.Array.Parallel.PArray (nf, fromUArray)
 import qualified Data.Vector.Unboxed as U
-import qualified Data.Array.Parallel.Unlifted as U
 import System.IO (hFlush, stdout)
 import System.Random (newStdGen, randomR)
 

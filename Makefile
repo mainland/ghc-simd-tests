@@ -5,16 +5,15 @@ LLVMLLC = llc
 
 GHCFLAGS+=$(EXTRAGHCFLAGS)
 
-GHCFLAGS+=-O2 -fllvm -dcore-lint -W -optc-march=corei7 -optc-O3
-GHCFLAGS+=-optlc=-O3
-GHCFLAGS+=-optlo=-O3
-GHCFLAGS+=-Odph -threaded
+GHCFLAGS+=-rtsopts -threaded -Odph
+GHCFLAGS+=-O2 -fllvm -optlo-O3 -optc-O3
+#GHCFLAGS+=-fcpr-off -fno-liberate-case
+#GHCFLAGS+=-optc-march=corei7
+GHCFLAGS+=-optc-march=amdfam10
+
 GHCFLAGS+= \
 	-hide-all-packages \
 	-package base \
-	-package dph-base \
-	-package dph-prim-par \
-	-package dph-lifted-base \
 	-package dph-lifted-vseg \
 	-package ghc-prim \
 	-package primitive \
@@ -26,7 +25,8 @@ GHCFLAGS+= \
 #GHCFLAGS+=-optlc=--enable-tbaa=true
 #GHCFLAGS+=-optlo=-loop-unroll -optlo=-indvars -optlo=-loop-simplify 
 
-#GHCFLAGS+=-debug -rtsopts=all
+GHCFLAGS+=-dcore-lint
+
 GHCFLAGS+=-keep-llvm-file
 GHCFLAGS+=-keep-s-file
 GHCFLAGS+=-keep-tmp-files
@@ -34,11 +34,13 @@ GHCFLAGS+=-keep-tmp-files
 
 GHCFLAGS+=-ddump-to-file
 #GHCFLAGS+=-dverbose-core2core
-#GHCFLAGS+=-ddump-cmm
+GHCFLAGS+=-ddump-cmm
 GHCFLAGS+=-ddump-simpl
 #GHCFLAGS+=-ddump-simpl-iterations
 #GHCFLAGS+=-ddump-simpl-stats
-#GHCFLAGS+=-ddump-stg
+GHCFLAGS+=-ddump-stg
+GHCFLAGS+=-ddump-prep
+GHCFLAGS+=-dsuppress-all -dppr-case-as-let -dppr-cols200
 
 #GHCCOREFLAGS+=-ddump-occur-anal
 #GHCCOREFLAGS+=-ddump-rule-firings
@@ -48,11 +50,11 @@ GHCFLAGS+=-ddump-simpl
 #GHCCOREFLAGS+=-dsuppress-idinfo
 #GHCCOREFLAGS+=-dsuppress-module-prefixes 
 #GHCCOREFLAGS+=-dsuppress-type-applications
-GHCCOREFLAGS+=-dsuppress-uniques
+#GHCCOREFLAGS+=-dsuppress-uniques
 
 MULTIVECTORFLAGS+=-package multivector -package-conf multivector/dist/package.conf.inplace
 
-EXAMPLES = sum intsum dotp saxpy prim roman
+EXAMPLES = sum dotp saxpy prim roman seq-bench par-bench
 EXAMPLEINCS = $(foreach EXAMPLE,$(EXAMPLES),-iexamples/$(EXAMPLE))
 
 .PHONY : all
@@ -63,9 +65,9 @@ clean :
 	rm -rf obj
 	rm -rf $(EXAMPLES)
 	rm -rf multivector/dist
-	find examples -name '*.s' | xargs rm -f
-	find examples -name '*.ll' | xargs rm -f
-	find examples -name '*.dump-*' | xargs rm -f
+	find examples util -name '*.s' | xargs rm -f
+	find examples util -name '*.ll' | xargs rm -f
+	find examples util -name '*.dump-*' | xargs rm -f
 
 multivector/dist/package.conf.inplace :
 	(cd multivector && cabal configure --disable-library-profiling --with-ghc=$(GHC) && cabal build)
@@ -94,7 +96,18 @@ DOTP_SRC = \
     examples/dotp/Dotp/Float/Vector.hs \
     examples/dotp/Dotp/Float/VectorAlt1.hs \
     examples/dotp/Dotp/Float/VectorAlt2.hs \
-    examples/dotp/Dotp/Float/VectorAlt3.hs
+    examples/dotp/Dotp/Float/VectorAlt3.hs \
+    examples/dotp/Dotp/Float/VectorAlt4.hs \
+    examples/dotp/Dotp/Double/Dph.hs \
+    examples/dotp/Dotp/Double/DphPA.hs \
+    examples/dotp/Dotp/Double/DphMulti.hs \
+    examples/dotp/Dotp/Double/Manual.hs \
+    examples/dotp/Dotp/Double/cmanual.c \
+    examples/dotp/Dotp/Double/CManual.hs \
+    examples/dotp/Dotp/Double/Multivector.hs \
+    examples/dotp/Dotp/Double/Scalar.hs \
+    examples/dotp/Dotp/Double/Vector.hs \
+    examples/dotp/Dotp/Double/VectorAlt4.hs
 
 SAXPY_SRC = \
     examples/saxpy/Saxpy/Float/Multivector.hs \
@@ -103,6 +116,18 @@ SAXPY_SRC = \
 
 sum : examples/sum/Main.hs $(SUM_SRC) $(INPLACE_PACKAGES)
 	$(GHC) $(GHCFLAGS) $(MULTIVECTORFLAGS) $< $(SUM_SRC) \
+	    --make \
+	    -odir obj/$* -hidir obj/$* -iexamples/$* -iutil \
+	    -o $@
+
+prim : examples/prim/Main.hs
+	$(GHC) $(GHCFLAGS) $< \
+	    --make \
+	    -odir obj/$* -hidir obj/$* -iexamples/$* -iutil \
+	    -o $@
+
+roman : examples/roman/Main.hs
+	$(GHC) $(GHCFLAGS) $< \
 	    --make \
 	    -odir obj/$* -hidir obj/$* -iexamples/$* -iutil \
 	    -o $@
@@ -119,10 +144,16 @@ saxpy : examples/saxpy/Main.hs $(SAXPY_SRC) $(INPLACE_PACKAGES)
 	    -odir obj/$* -hidir obj/$* -iexamples/$* -iutil \
 	    -o $@
 
-bench : benchmark/Main.hs $(SUM_SRC) $(DOTP_SRC) $(INPLACE_PACKAGES)
+seq-bench : benchmarks/seq-bench/Main.hs $(SUM_SRC) $(DOTP_SRC) $(INPLACE_PACKAGES)
 	$(GHC) $(GHCFLAGS) $(MULTIVECTORFLAGS) $< $(SUM_SRC) $(DOTP_SRC) \
 	    --make \
-	    -odir obj/$* -hidir obj/$* -iexamples/sum -iexamples/dotp -ibenchmark -iutil \
+	    -odir obj/$* -hidir obj/$* -iexamples/sum -iexamples/dotp -ibench -iutil \
+	    -o $@
+
+par-bench : benchmarks/par-bench/Main.hs $(DOTP_SRC) $(INPLACE_PACKAGES)
+	$(GHC) $(GHCFLAGS) $(MULTIVECTORFLAGS) $< $(DOTP_SRC) \
+	    --make \
+	    -odir obj/$* -hidir obj/$* -iexamples/sum -iexamples/dotp -ibench -iutil \
 	    -o $@
 
 %.core : %.hs

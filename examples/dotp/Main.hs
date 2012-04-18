@@ -6,11 +6,8 @@ module Main where
 
 import Control.Exception (evaluate)
 import Data.Array.Parallel
-import Data.Array.Parallel.Array
-import "dph-lifted-vseg" Data.Array.Parallel.PArray (nf, fromUArray)
-import "dph-prim-par" Data.Array.Parallel.Unlifted
+import Data.Array.Parallel.PArray (nf, fromUArray)
 import qualified Data.Vector.Unboxed as U
-import qualified Data.Array.Parallel.Unlifted as U
 import System.IO (hFlush, stdout)
 import System.Random (newStdGen, randomR)
 
@@ -52,6 +49,10 @@ import qualified Dotp.Float.VectorAlt2
 #if defined(VECTORALT3)
 import qualified Dotp.Float.VectorAlt3
 #endif /* defined(VECTORALT3) */
+
+#if defined(VECTORALT4)
+import qualified Dotp.Float.VectorAlt4
+#endif /* defined(VECTORALT4) */
 #endif /* defined(FLOAT) */
 
 #if defined(DOUBLE)
@@ -63,6 +64,10 @@ import qualified Dotp.Double.Scalar
 import qualified Dotp.Double.Manual
 #endif /* defined(MANUAL) */
 
+#if defined(CMANUAL)
+import qualified Dotp.Double.CManual
+#endif /* defined(CMANUAL) */
+
 #if defined(MULTIVECTOR)
 import qualified Dotp.Double.Multivector
 #endif /* defined(MULTIVECTOR) */
@@ -71,9 +76,17 @@ import qualified Dotp.Double.Multivector
 import qualified Dotp.Double.Vector
 #endif /* defined(VECTOR) */
 
+#if defined(VECTORALT4)
+import qualified Dotp.Double.VectorAlt4
+#endif /* defined(VECTORALT4) */
+
 #if defined(DPH)
 import qualified Dotp.Double.Dph
 #endif /* defined(DPH) */
+
+#if defined(DPHPA)
+import qualified Dotp.Double.DphPA
+#endif /* defined(DPHPA) */
 
 #if defined(DPHMULTI)
 import qualified Dotp.Double.DphMulti
@@ -153,6 +166,10 @@ main = do
 #if defined(VECTORALT3)
     runBenchmark nTRIALS " dotp Float SIMD vector alt 3" (uncurry Dotp.Float.VectorAlt3.dotp)   (fu, fv)
 #endif /* defined(VECTORALT3) */
+
+#if defined(VECTORALT4)
+    runBenchmark nTRIALS " dotp Float SIMD vector alt 4" (uncurry Dotp.Float.VectorAlt4.dotp)   (fu, fv)
+#endif /* defined(VECTORALT4) */
 #endif /* defined(FLOAT) */
 
 #if defined(DOUBLE)
@@ -164,6 +181,10 @@ main = do
     runBenchmark nTRIALS "      dotp Double SIMD manual" (uncurry Dotp.Double.Manual.dotp)      (du, dv)
 #endif /* defined(MANUAL) */
 
+#if defined(CMANUAL)
+    runBenchmark nTRIALS "    dotp Double SIMD C manual" (uncurry Dotp.Double.CManual.dotp)    (du, dv)
+#endif /* defined(CMANUAL) */
+
 #if defined(MULTIVECTOR)
     runBenchmark nTRIALS " dotp Double SIMD multivector" (uncurry Dotp.Double.Multivector.dotp) (du, dv)
 #endif /* defined(MULTIVECTOR) */
@@ -172,9 +193,17 @@ main = do
     runBenchmark nTRIALS "      dotp Double SIMD vector" (uncurry Dotp.Double.Vector.dotp)      (du, dv)
 #endif /* defined(VECTOR) */
 
+#if defined(VECTORALT4)
+    runBenchmark nTRIALS "dotp Double SIMD vector alt 4" (uncurry Dotp.Double.VectorAlt4.dotp)  (du, dv)
+#endif /* defined(VECTORALT4) */
+
 #if defined(DPH)
     runBenchmark nTRIALS "       dotp Double scalar DPH" (uncurry Dotp.Double.Dph.dotp)         (dupa, dvpa)
 #endif /* defined(DPH) */
+
+#if defined(DPHPA)
+    runBenchmark nTRIALS "    dotp Double scalar DPH PA" (uncurry Dotp.Double.DphPA.dotp)       (dupa, dvpa)
+#endif /* defined(DPHPA) */
 
 #if defined(DPHMULTI)
     runBenchmark nTRIALS "         dotp Double SIMD DPH" (uncurry Dotp.Double.DphMulti.dotp)    (dupa, dvpa)

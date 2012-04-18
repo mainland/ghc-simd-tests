@@ -19,7 +19,6 @@ import Data.Vector.Unboxed.Packed
 import qualified Data.Vector.Unboxed as U
 
 dotp :: U.Vector Float -> U.Vector Float -> Float
-{-# NOINLINE dotp #-}
 dotp u v | U.length u /= U.length v =
     error "dotp: vectors of different lengths"
 

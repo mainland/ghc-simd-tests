@@ -13,7 +13,8 @@ module Util (
     secs,
     timeBenchmark,
     runBenchmark,
-    unsafeFloatUVectorToPtr
+    unsafeFloatUVectorToPtr,
+    unsafeDoubleUVectorToPtr
   ) where
 
 import Control.Exception (evaluate)
@@ -105,3 +106,15 @@ unsafeFloatUVectorToPtr (U.V_Float (P.Vector off len arr)) =
 
     sz :: Int
     sz = sizeOf (undefined :: Float)
+
+unsafeDoubleUVectorToPtr :: U.Vector Double -> (Ptr CDouble, CInt)
+{-# INLINE unsafeDoubleUVectorToPtr #-}
+unsafeDoubleUVectorToPtr (U.V_Double (P.Vector off len arr)) =
+    (p, fromIntegral (fromIntegral (len - off)))
+  where
+    p :: Ptr CDouble
+    p = case byteArrayContents arr `plusAddr` off*sz of
+          Addr a -> Ptr a
+
+    sz :: Int
+    sz = sizeOf (undefined :: Double)
