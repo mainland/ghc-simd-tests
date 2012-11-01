@@ -13,14 +13,13 @@ import qualified Data.Vector.Unboxed as U
 import System.IO (hFlush, stdout)
 import Text.Printf
 
-import Util
+import Util.Random
+import Util.Benchmark
 
 import qualified Dotp.Double.Scalar
 import qualified Dotp.Double.Manual
 import qualified Dotp.Double.CManual
-import qualified Dotp.Double.Multivector
 import qualified Dotp.Double.Vector
-import qualified Dotp.Double.VectorAlt4
 import qualified Dotp.Double.Dph
 import qualified Dotp.Double.DphMulti
 import qualified Dotp.Double.DphPA
@@ -55,14 +54,12 @@ main = do
 
         setNumCapabilities m
 
-        runOne "dotp" "scalar"      n m (uncurry Dotp.Double.Scalar.dotp) (du, dv)
-        runOne "dotp" "manual"      n m (uncurry Dotp.Double.Manual.dotp) (du, dv)
-        runOne "dotp" "cmanual"     n m (uncurry Dotp.Double.CManual.dotp) (du, dv)
-        runOne "dotp" "multivector" n m (uncurry Dotp.Double.Multivector.dotp) (du, dv)
-        runOne "dotp" "vector"      n m (uncurry Dotp.Double.Vector.dotp) (du, dv)
-        runOne "dotp" "vectoralt4"  n m (uncurry Dotp.Double.VectorAlt4.dotp) (du, dv)
-        runOne "dotp" "dph"         n m (uncurry Dotp.Double.Dph.dotp) (dupa, dvpa)
-        runOne "dotp" "dphpa"       n m (uncurry Dotp.Double.DphPA.dotp) (dupa, dvpa)
+        runOne "dotp" "scalar"      n m (uncurry Dotp.Double.Scalar.dotp)   (du, dv)
+        runOne "dotp" "manual"      n m (uncurry Dotp.Double.Manual.dotp)   (du, dv)
+        runOne "dotp" "cmanual"     n m (uncurry Dotp.Double.CManual.dotp)  (du, dv)
+        runOne "dotp" "vector"      n m (uncurry Dotp.Double.Vector.dotp)   (du, dv)
+        runOne "dotp" "dph"         n m (uncurry Dotp.Double.Dph.dotp)      (dupa, dvpa)
+        runOne "dotp" "dphpa"       n m (uncurry Dotp.Double.DphPA.dotp)    (dupa, dvpa)
         runOne "dotp" "dphmulti"    n m (uncurry Dotp.Double.DphMulti.dotp) (dupa, dvpa)
 
     runOne  ::  String

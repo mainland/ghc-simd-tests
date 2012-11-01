@@ -60,12 +60,6 @@ def getOpts():
                       action="store_true", dest="pardotp")
     parser.add_option("--sec",
                       action="store_true", dest="sec")
-    parser.add_option("--multivector",
-                      action="store_true", dest="multivector")
-    parser.add_option("--alts",
-                      action="store_true", dest="alts")
-    parser.add_option("--alt4",
-                      action="store_true", dest="alt4")
     parser.add_option("-o", "--output",
                       action="store", type="string", dest="output")
     (opts, args) = parser.parse_args()
@@ -107,23 +101,9 @@ def plotBench(opts, func, data):
 
     sets = [('scalar',  'Scalar (Haskell)'),
             ('cscalar', 'Scalar (C)'),
-            ('manual',  'Manual (Haskell)'),
-            ('cmanual', 'Manual (C)'),
-            ('vector',  'vector')]
-    
-    if opts.multivector:
-        sets += [('multivector', 'multivector')]
-    
-    if opts.alts:
-        sets += [('vectoralt1', 'vector (alt 1)'),
-                 ('vectoralt2', 'vector (alt 2)'),
-                 ('vectoralt3', 'vector (alt 3)'),
-                 ('vectoralt4', 'vector (alt 4)'),
-                 ]
-    
-    if opts.alt4:
-        sets += [('vectoralt4', 'vector (alt 4)'),
-                 ]
+            ('manual',  'Hand-written SIMD (Haskell)'),
+            ('cmanual', 'Hand-written SIMD (C)'),
+            ('vector',  'Vector library (Haskell')]
 
     for (f, label) in sets:
         r = selectField(data, func, "variant", f)
@@ -161,11 +141,11 @@ def plotParBench(opts, func, data):
     LS = itertools.cycle(['-', '--', '-', '--', ':'])
     MS = itertools.cycle([10,   7,   10,  10,   10])
 
-    sets = [('cmanual',    'C (SIMD)'),
-            ('vectoralt4', 'vector (SIMD)'),
-            ('dph',        'DPH'),
-            ('dphmulti',   'DPH (SIMD)'),
-            ('dphpa',      'DPH (Parallel Array)')]
+    sets = [('cmanual',  'C (SIMD)'),
+            ('vector',   'Vector library (SIMD)'),
+            ('dph',      'DPH'),
+            ('dphmulti', 'DPH (SIMD)'),
+            ('dphpa',    'DPH (Parallel Array)')]
 
     for (f, label) in sets:
         r = selectField(data, func, "variant", f)

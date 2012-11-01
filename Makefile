@@ -9,6 +9,8 @@ LLVMLLC = llc
 
 GHCFLAGS+=$(EXTRAGHCFLAGS)
 
+GHCFLAGS+=-Werror
+
 GHCFLAGS+=-rtsopts -threaded -Odph
 GHCFLAGS+=-O2 -fllvm -optlo-O3 -optc-O3
 #GHCFLAGS+=-fcpr-off -fno-liberate-case
@@ -59,7 +61,7 @@ GHCFLAGS+=-dsuppress-all -dppr-case-as-let -dppr-cols200
 
 MULTIVECTORFLAGS+=-package multivector -package-db multivector/dist/package.conf.inplace
 
-EXAMPLES = sum dotp saxpy prim roman seq-bench par-bench
+EXAMPLES = prim roman sanity seq-bench par-bench
 EXAMPLEINCS = $(foreach EXAMPLE,$(EXAMPLES),-iexamples/$(EXAMPLE))
 
 .PHONY : all
@@ -70,95 +72,72 @@ clean :
 	rm -rf obj
 	rm -rf $(EXAMPLES)
 	rm -rf multivector/dist
-	find examples util -name '*.s' | xargs rm -f
-	find examples util -name '*.ll' | xargs rm -f
-	find examples util -name '*.dump-*' | xargs rm -f
+	find common examples tests benchmarks -name '*.s' | xargs rm -f
+	find common examples tests benchmarks -name '*.ll' | xargs rm -f
+	find common examples tests benchmarks -name '*.dump-*' | xargs rm -f
 
-multivector/dist/package.conf.inplace :
-	(cd multivector && cabal configure --disable-library-profiling --with-ghc=$(GHC) --with-ghc-pkg=$(GHCPKG) && cabal build)
-
-INPLACE_PACKAGES = \
-    multivector/dist/package.conf.inplace
-
-SUM_SRC = \
-    examples/sum/Sum/Float/cscalar.c \
-    examples/sum/Sum/Float/CScalar.hs \
-    examples/sum/Sum/Float/Manual.hs \
-    examples/sum/Sum/Float/cmanual.c \
-    examples/sum/Sum/Float/CManual.hs \
-    examples/sum/Sum/Float/Multivector.hs \
-    examples/sum/Sum/Float/Scalar.hs \
-    examples/sum/Sum/Float/Vector.hs
-
-DOTP_SRC = \
-    examples/dotp/Dotp/Float/cscalar.c \
-    examples/dotp/Dotp/Float/CScalar.hs \
-    examples/dotp/Dotp/Float/Manual.hs \
-    examples/dotp/Dotp/Float/cmanual.c \
-    examples/dotp/Dotp/Float/CManual.hs \
-    examples/dotp/Dotp/Float/Multivector.hs \
-    examples/dotp/Dotp/Float/Scalar.hs \
-    examples/dotp/Dotp/Float/Vector.hs \
-    examples/dotp/Dotp/Float/VectorAlt1.hs \
-    examples/dotp/Dotp/Float/VectorAlt2.hs \
-    examples/dotp/Dotp/Float/VectorAlt3.hs \
-    examples/dotp/Dotp/Float/VectorAlt4.hs \
-    examples/dotp/Dotp/Double/Dph.hs \
-    examples/dotp/Dotp/Double/DphPA.hs \
-    examples/dotp/Dotp/Double/DphMulti.hs \
-    examples/dotp/Dotp/Double/Manual.hs \
-    examples/dotp/Dotp/Double/cmanual.c \
-    examples/dotp/Dotp/Double/CManual.hs \
-    examples/dotp/Dotp/Double/Multivector.hs \
-    examples/dotp/Dotp/Double/Scalar.hs \
-    examples/dotp/Dotp/Double/Vector.hs \
-    examples/dotp/Dotp/Double/VectorAlt4.hs
-
-SAXPY_SRC = \
-    examples/saxpy/Saxpy/Float/Multivector.hs \
-    examples/saxpy/Saxpy/Float/Scalar.hs \
-    examples/saxpy/Saxpy/Float/Vector.hs
-
-sum : examples/sum/Main.hs $(SUM_SRC) $(INPLACE_PACKAGES)
-	$(GHC) $(GHCFLAGS) $(MULTIVECTORFLAGS) $< $(SUM_SRC) \
-	    --make \
-	    -odir obj/$* -hidir obj/$* -iexamples/sum/$* -iutil \
-	    -o $@
+COMMON_SRC = \
+    common/Dotp/Double/cmanual.c \
+    common/Dotp/Double/CManual.hs \
+    common/Dotp/Double/Dph.hs \
+    common/Dotp/Double/DphMulti.hs \
+    common/Dotp/Double/DphPA.hs \
+    common/Dotp/Double/Manual.hs \
+    common/Dotp/Double/Scalar.hs \
+    common/Dotp/Double/Vector.hs \
+    common/Dotp/Float/cmanual.c \
+    common/Dotp/Float/CManual.hs \
+    common/Dotp/Float/cscalar.c \
+    common/Dotp/Float/CScalar.hs \
+    common/Dotp/Float/Manual.hs \
+    common/Dotp/Float/Scalar.hs \
+    common/Dotp/Float/Vector.hs \
+    common/Saxpy/Float/Scalar.hs \
+    common/Saxpy/Float/Vector.hs \
+    common/Sum/Double/Scalar.hs \
+    common/Sum/Double/Vector.hs \
+    common/Sum/Float/cmanual.c \
+    common/Sum/Float/CManual.hs \
+    common/Sum/Float/cscalar.c \
+    common/Sum/Float/CScalar.hs \
+    common/Sum/Float/Manual.hs \
+    common/Sum/Float/Scalar.hs \
+    common/Sum/Float/Vector.hs \
+    common/Sum/Int64/Scalar.hs \
+    common/Sum/Int64/Vector.hs \
+    common/Util/Benchmark.hs \
+    common/Util/Random.hs \
+    common/Util/Statistics.hs \
+    common/Util/Unsafe.hs
 
 prim : examples/prim/Main.hs
 	$(GHC) $(GHCFLAGS) $< \
 	    --make \
-	    -odir obj/$* -hidir obj/$* -iexamples/$* -iutil \
+	    -odir obj/prim/$* -hidir obj/prim/$* -icommon \
 	    -o $@
 
 roman : examples/roman/Main.hs
 	$(GHC) $(GHCFLAGS) $< \
 	    --make \
-	    -odir obj/$* -hidir obj/$* -iexamples/$* -iutil \
+	    -odir obj/roman/$* -hidir obj/roman/$* -icommon \
 	    -o $@
 
-dotp : examples/dotp/Main.hs $(DOTP_SRC) $(INPLACE_PACKAGES)
-	$(GHC) $(GHCFLAGS) $(MULTIVECTORFLAGS) $< $(DOTP_SRC) \
+sanity : tests/sanity/Main.hs $(COMMON_SRC)
+	$(GHC) $(GHCFLAGS) $< $(COMMON_SRC) \
 	    --make \
-	    -odir obj/$* -hidir obj/$* -iexamples/$* -iutil \
+	    -odir obj/sanity/$* -hidir obj/sanity/$* -icommon \
 	    -o $@
 
-saxpy : examples/saxpy/Main.hs $(SAXPY_SRC) $(INPLACE_PACKAGES)
-	$(GHC) $(GHCFLAGS) $(MULTIVECTORFLAGS) $< $(SAXPY_SRC) \
+seq-bench : benchmarks/seq-bench/Main.hs $(COMMON_SRC)
+	$(GHC) $(GHCFLAGS) $< $(COMMON_SRC) \
 	    --make \
-	    -odir obj/$* -hidir obj/$* -iexamples/$* -iutil \
-	    -o $@
-
-seq-bench : benchmarks/seq-bench/Main.hs $(SUM_SRC) $(DOTP_SRC) $(INPLACE_PACKAGES)
-	$(GHC) $(GHCFLAGS) $(MULTIVECTORFLAGS) $< $(SUM_SRC) $(DOTP_SRC) \
-	    --make \
-	    -odir obj/$* -hidir obj/$* -iexamples/sum -iexamples/dotp -ibench -iutil \
+	    -odir obj/seq-bench/$* -hidir obj/seq-bench/$* -icommon \
 	    -o $@
 
 par-bench : benchmarks/par-bench/Main.hs $(DOTP_SRC) $(INPLACE_PACKAGES)
-	$(GHC) $(GHCFLAGS) $(MULTIVECTORFLAGS) $< $(DOTP_SRC) \
+	$(GHC) $(GHCFLAGS) $< $(COMMON_SRC) \
 	    --make \
-	    -odir obj/$* -hidir obj/$* -iexamples/sum -iexamples/dotp -ibench -iutil \
+	    -odir obj/par-bench/$* -hidir obj/par-bench/$* -icommon \
 	    -o $@
 
 %.core : %.hs

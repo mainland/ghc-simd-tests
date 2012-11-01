@@ -6,7 +6,6 @@
 module Main where
 
 import GHC.Prim
-import GHC.Types
 
 import Data.Primitive.Multi.FloatX4
 
