@@ -11,7 +11,7 @@ module OldFold (
     u_mfoldl'
   ) where
 
-import "vector" Data.Primitive.Multi
+import "primitive" Data.Primitive.Multi
 import Data.Vector.Fusion.Stream.Monadic (MultiUnf(..), Step(..), SPEC(..))
 import qualified Data.Vector.Fusion.Stream as S
 import qualified Data.Vector.Fusion.Stream.Monadic as SM

@@ -12,7 +12,7 @@ import qualified Data.Vector.Unboxed as U
 import OldFold
 import Util
 
-import "vector" Data.Primitive.Multi
+import "primitive" Data.Primitive.Multi
 
 dotp :: U.Vector Float -> U.Vector Float -> Float
 dotp v w =

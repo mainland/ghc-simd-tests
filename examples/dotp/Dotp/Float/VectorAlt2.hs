@@ -11,7 +11,7 @@ module Dotp.Float.VectorAlt2 (
 import qualified Data.Vector.Unboxed as U
 import Util
 
-import "vector" Data.Primitive.Multi
+import "primitive" Data.Primitive.Multi
 
 data Pair = Pair {-# UNPACK #-} !Float {-# UNPACK #-} !FloatX4
 

@@ -10,7 +10,7 @@ module Dotp.Double.Vector (
 
 import qualified Data.Vector.Unboxed as U
 
-import "vector" Data.Primitive.Multi
+import "primitive" Data.Primitive.Multi
 
 dotp :: U.Vector Double -> U.Vector Double -> Double
 dotp v w =

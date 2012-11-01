@@ -10,7 +10,7 @@ module Saxpy.Float.Vector (
 
 import qualified Data.Vector.Unboxed as U
 
-import "vector" Data.Primitive.Multi
+import "primitive" Data.Primitive.Multi
 
 -- The seq is very important for efficiency! It allows the evaluation of the
 -- constant @a'@ to be lifted out of the inner loop.

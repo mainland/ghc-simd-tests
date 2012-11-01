@@ -1,4 +1,8 @@
-GHC	?= ghc
+GHCBIN	?= $(HOME)/ghc/ghc-simd-build/inplace/bin
+#GHCBIN	?= /5playpen/gmainlan/ghc-simd-build/inplace/bin
+GHC	?= $(GHCBIN)/ghc-stage2
+GHCPKG	?= $(GHCBIN)/ghc-pkg
+CABAL	?= $(GHCBIN)/ghc-cabal
 
 LLVMOPT = opt
 LLVMLLC = llc
@@ -9,7 +13,7 @@ GHCFLAGS+=-rtsopts -threaded -Odph
 GHCFLAGS+=-O2 -fllvm -optlo-O3 -optc-O3
 #GHCFLAGS+=-fcpr-off -fno-liberate-case
 #GHCFLAGS+=-optc-march=corei7
-GHCFLAGS+=-optc-march=amdfam10
+#GHCFLAGS+=-optc-march=amdfam10
 
 GHCFLAGS+= \
 	-hide-all-packages \
@@ -27,19 +31,20 @@ GHCFLAGS+= \
 
 GHCFLAGS+=-dcore-lint
 
-GHCFLAGS+=-keep-llvm-file
-GHCFLAGS+=-keep-s-file
-GHCFLAGS+=-keep-tmp-files
+#GHCFLAGS+=-keep-llvm-file
+#GHCFLAGS+=-keep-s-file
+#GHCFLAGS+=-keep-tmp-files
 #GHCFLAGS+=-fmax-simplifier-iterations=10
 
-GHCFLAGS+=-ddump-to-file
+#GHCFLAGS+=-ddump-to-file
 #GHCFLAGS+=-dverbose-core2core
-GHCFLAGS+=-ddump-cmm
-GHCFLAGS+=-ddump-simpl
+#GHCFLAGS+=-ddump-cmmz
+#GHCFLAGS+=-ddump-llvm
+#GHCFLAGS+=-ddump-simpl
 #GHCFLAGS+=-ddump-simpl-iterations
 #GHCFLAGS+=-ddump-simpl-stats
-GHCFLAGS+=-ddump-stg
-GHCFLAGS+=-ddump-prep
+#GHCFLAGS+=-ddump-stg
+#GHCFLAGS+=-ddump-prep
 GHCFLAGS+=-dsuppress-all -dppr-case-as-let -dppr-cols200
 
 #GHCCOREFLAGS+=-ddump-occur-anal
@@ -52,7 +57,7 @@ GHCFLAGS+=-dsuppress-all -dppr-case-as-let -dppr-cols200
 #GHCCOREFLAGS+=-dsuppress-type-applications
 #GHCCOREFLAGS+=-dsuppress-uniques
 
-MULTIVECTORFLAGS+=-package multivector -package-conf multivector/dist/package.conf.inplace
+MULTIVECTORFLAGS+=-package multivector -package-db multivector/dist/package.conf.inplace
 
 EXAMPLES = sum dotp saxpy prim roman seq-bench par-bench
 EXAMPLEINCS = $(foreach EXAMPLE,$(EXAMPLES),-iexamples/$(EXAMPLE))
@@ -70,7 +75,7 @@ clean :
 	find examples util -name '*.dump-*' | xargs rm -f
 
 multivector/dist/package.conf.inplace :
-	(cd multivector && cabal configure --disable-library-profiling --with-ghc=$(GHC) && cabal build)
+	(cd multivector && cabal configure --disable-library-profiling --with-ghc=$(GHC) --with-ghc-pkg=$(GHCPKG) && cabal build)
 
 INPLACE_PACKAGES = \
     multivector/dist/package.conf.inplace
@@ -117,7 +122,7 @@ SAXPY_SRC = \
 sum : examples/sum/Main.hs $(SUM_SRC) $(INPLACE_PACKAGES)
 	$(GHC) $(GHCFLAGS) $(MULTIVECTORFLAGS) $< $(SUM_SRC) \
 	    --make \
-	    -odir obj/$* -hidir obj/$* -iexamples/$* -iutil \
+	    -odir obj/$* -hidir obj/$* -iexamples/sum/$* -iutil \
 	    -o $@
 
 prim : examples/prim/Main.hs

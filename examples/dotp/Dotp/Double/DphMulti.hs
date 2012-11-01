@@ -7,7 +7,7 @@ module Dotp.Double.DphMulti (
 
 import Data.Array.Parallel
 import Data.Array.Parallel.Prelude
-import Data.Array.Parallel.Prelude.MultiDouble as D
+import Data.Array.Parallel.Prelude.Double as D
 
 import qualified Prelude
 

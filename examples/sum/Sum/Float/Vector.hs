@@ -12,7 +12,7 @@ import Prelude hiding (sum)
 
 import qualified Data.Vector.Unboxed as U
 
-import "vector" Data.Primitive.Multi
+import "primitive" Data.Primitive.Multi
 
 sum :: U.Vector Float -> Float
 sum v =

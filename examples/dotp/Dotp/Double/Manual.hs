@@ -9,7 +9,7 @@ module Dotp.Double.Manual (
     dotp
   ) where
 
-import "vector" Data.Primitive.Multi
+import "primitive" Data.Primitive.Multi
 import qualified Data.Vector.Unboxed as U
 
 dotp :: U.Vector Double -> U.Vector Double -> Double

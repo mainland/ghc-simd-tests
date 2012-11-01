@@ -13,7 +13,7 @@ import Prelude hiding (sum)
 import Data.Int
 import qualified Data.Vector.Unboxed as U
 
-import "vector" Data.Primitive.Multi
+import "primitive" Data.Primitive.Multi
 
 sum :: U.Vector Int64 -> Int64
 sum v =

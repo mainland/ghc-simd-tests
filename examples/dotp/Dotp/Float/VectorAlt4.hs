@@ -10,7 +10,7 @@ module Dotp.Float.VectorAlt4 (
 
 import qualified Data.Vector.Unboxed as U
 
-import "vector" Data.Primitive.Multi
+import "primitive" Data.Primitive.Multi
 
 dotp :: U.Vector Float -> U.Vector Float -> Float
 dotp v w =
