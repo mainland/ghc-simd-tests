@@ -76,6 +76,7 @@ all : $(EXAMPLES)
 clean :
 	rm -rf obj
 	rm -rf $(EXAMPLES)
+	rm -rf $(FIGS)
 	rm -rf multivector/dist
 	find common examples tests benchmarks -name '*.s' | xargs rm -f
 	find common examples tests benchmarks -name '*.ll' | xargs rm -f
@@ -175,3 +176,47 @@ obj/seq-bench/Dotp/Double/Vector.s : obj/seq-bench/Dotp/Double/Vector.bc
 
 obj/seq-bench/Dotp/Double/Vector.o : common/Dotp/Double/Vector.s
 	/usr/bin/gcc -fno-stack-protector -Wl,--hash-size=31 -Wl,--reduce-memory-overheads -DTABLES_NEXT_TO_CODE -c $< -o $@
+
+#
+# Figures
+#
+
+PLOT      = ./bin/plot.py
+
+FIGS = \
+	figs/dotp-serial.pdf \
+	figs/dotp-serial-ratio.pdf \
+	figs/dotp-serial-ratio-1.pdf \
+	figs/dotp-serial-ratio-2.pdf \
+	figs/rbf-serial-ratio.pdf \
+	figs/dotp-parallel.pdf \
+	figs/dotp-parallel-ratio.pdf
+
+figs : $(FIGS)
+
+data/seq-bench.dat : seq-bench
+	./seq-bench >$@
+
+data/par-bench.dat : par-bench
+	./par-bench >$@
+
+figs/dotp-serial.pdf : data/seq-bench.dat $(PLOT)
+	$(PLOT) --dotp $< -o $@
+
+figs/dotp-serial-ratio.pdf : data/seq-bench.dat $(PLOT)
+	$(PLOT) --dotp --ratio $< -o $@
+
+figs/dotp-serial-ratio-1.pdf : data/seq-bench.dat $(PLOT)
+	$(PLOT) --dotp --ratio --nsets 1 $< -o $@
+
+figs/dotp-serial-ratio-2.pdf : data/seq-bench.dat $(PLOT)
+	$(PLOT) --dotp --ratio --nsets 2 $< -o $@
+
+figs/rbf-serial-ratio.pdf : data/seq-bench.dat $(PLOT)
+	$(PLOT) --rbf --ratio $< -o $@
+
+figs/dotp-parallel.pdf : data/par-bench.dat $(PLOT)
+	$(PLOT) --par-dotp $< -o $@
+
+figs/dotp-parallel-ratio.pdf : data/par-bench.dat $(PLOT)
+	$(PLOT) --par-dotp --ratio $< --ymin 0 --ymax 1.5 -o $@
