@@ -5,18 +5,26 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Dotp.Double.Vector (
-    dotp
+module Rbf.Double.Vector (
+    rbf
   ) where
 
 import Data.Primitive.Multi
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 
-dotp :: U.Vector Double -> U.Vector Double -> Double
-dotp v w =
-    U.mfold' (+) (+) 0 $ U.mzipWith (*) (*) v w
---        mfold' (+) 0 $ mzipWith (*) v w
+rbf :: Double -> U.Vector Double -> U.Vector Double -> Double
+rbf nu v w =
+    exp (-nu * msum (mzipWith norm v w))
+  where
+    square x = x * x
+    norm x y = square (x-y)
+
+msum  ::  (G.PackedVector U.Vector a, U.Unbox a, Num a, Num (Multi a))
+      =>  U.Vector a
+      ->  a
+{-# INLINE msum #-}
+msum u = mfold' (+) 0 u
 
 mfold'  ::  (G.PackedVector U.Vector a, U.Unbox a, Num a, Num (Multi a))
         =>  (forall a . Num a => a -> a -> a)

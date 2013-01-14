@@ -5,56 +5,73 @@
 module Main where
 
 import Control.Exception (evaluate)
-import qualified Data.Vector.Unboxed as U
+import Foreign (sizeOf)
 import System.IO (hFlush, stdout)
 import Text.Printf
+
+import qualified Data.Vector.Unboxed as U
 
 import Util.Random
 import Util.Benchmark
 
-import qualified Sum.Float.Scalar
-import qualified Sum.Float.CScalar
-import qualified Sum.Float.Manual
-import qualified Sum.Float.CManual
-import qualified Sum.Float.Vector
+import qualified Sum.Double.Scalar
+import qualified Sum.Double.CScalar
+import qualified Sum.Double.Manual
+import qualified Sum.Double.CManual
+import qualified Sum.Double.Vector
 
-import qualified Dotp.Float.Scalar
-import qualified Dotp.Float.CScalar
-import qualified Dotp.Float.Manual
-import qualified Dotp.Float.CManual
-import qualified Dotp.Float.Vector
+import qualified Dotp.Double.Scalar
+import qualified Dotp.Double.CScalar
+import qualified Dotp.Double.Manual
+import qualified Dotp.Double.CManual
+import qualified Dotp.Double.CBlas
+import qualified Dotp.Double.Vector
+
+import qualified Rbf.Double.CManual
+import qualified Rbf.Double.Vector
+import qualified Rbf.Double.Scalar
 
 nTRIALS :: Int
 nTRIALS = 100
 
 main :: IO ()
 main =
-    mapM_ runN (map (round . (2**)) [10..24 :: Float])
+    mapM_ runN (map (round . (2**)) [12..24 :: Float])
   where
     runN :: Int -> IO ()
     runN n = do
         -- generate random input vectors
-        fu :: U.Vector Float      <-  randomU n range
-        fv :: U.Vector Float      <-  randomU n range
+        fu :: U.Vector Double <-  randomU n range
+        fv :: U.Vector Double <-  randomU n range
+
+        fu2 :: U.Vector Double <-  randomU n range2
+        fv2 :: U.Vector Double <-  randomU n range2
 
         -- putStr "Generating random vectors..."
         hFlush stdout
         evaluate fu
         evaluate fv
+        evaluate fu2
+        evaluate fv2
         -- putStrLn "done."
         hFlush stdout
 
-        runOne "sum" "scalar"      n Sum.Float.Scalar.sum  fu
-        runOne "sum" "cscalar"     n Sum.Float.CScalar.sum fu
-        runOne "sum" "manual"      n Sum.Float.Manual.sum  fu
-        runOne "sum" "cmanual"     n Sum.Float.CManual.sum fu
-        runOne "sum" "vector"      n Sum.Float.Vector.sum  fu
+        runOne "sum" "scalar"      n Sum.Double.Scalar.sum  fu
+        runOne "sum" "cscalar"     n Sum.Double.CScalar.sum fu
+        runOne "sum" "manual"      n Sum.Double.Manual.sum  fu
+        runOne "sum" "cmanual"     n Sum.Double.CManual.sum fu
+        runOne "sum" "vector"      n Sum.Double.Vector.sum  fu
 
-        runOne "dotp" "scalar"      n (uncurry Dotp.Float.Scalar.dotp)  (fu, fv)
-        runOne "dotp" "cscalar"     n (uncurry Dotp.Float.CScalar.dotp) (fu, fv)
-        runOne "dotp" "manual"      n (uncurry Dotp.Float.Manual.dotp)  (fu, fv)
-        runOne "dotp" "cmanual"     n (uncurry Dotp.Float.CManual.dotp) (fu, fv)
-        runOne "dotp" "vector"      n (uncurry Dotp.Float.Vector.dotp)  (fu, fv)
+        runOne "dotp" "scalar"      n (uncurry Dotp.Double.Scalar.dotp)  (fu, fv)
+        runOne "dotp" "cscalar"     n (uncurry Dotp.Double.CScalar.dotp) (fu, fv)
+        runOne "dotp" "manual"      n (uncurry Dotp.Double.Manual.dotp)  (fu, fv)
+        runOne "dotp" "cmanual"     n (uncurry Dotp.Double.CManual.dotp) (fu, fv)
+        runOne "dotp" "cblas"       n (uncurry Dotp.Double.CBlas.dotp)   (fu, fv)
+        runOne "dotp" "vector"      n (uncurry Dotp.Double.Vector.dotp)  (fu, fv)
+
+        runOne "rbf" "scalar"       n (uncurry (Rbf.Double.Scalar.rbf nu))  (fu2, fv2)
+        runOne "rbf" "vector"       n (uncurry (Rbf.Double.Vector.rbf nu))  (fu2, fv2)
+        runOne "rbf" "cmanual"      n (uncurry (Rbf.Double.CManual.rbf nu)) (fu2, fv2)
 
     runOne  ::  String
             ->  String
@@ -68,3 +85,9 @@ main =
 
     range :: Num a => (a, a)
     range = (-100, 100)  -- range of vector elements
+
+    range2 :: Num a => (a, a)
+    range2 = (0, 1)  -- range of vector elements
+
+    nu :: Double
+    nu = 0.001

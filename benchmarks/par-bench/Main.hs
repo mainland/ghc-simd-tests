@@ -31,7 +31,7 @@ main :: IO ()
 main = do
     m_max <- getNumCapabilities
     let ms | m_max == 1 = [1]
-           | otherwise  = m_max : m_max-1 : downBy2 (m_max `div` 2)
+           | otherwise  = m_max : m_max-1 : downBy2 m_max
     mapM_ runN [(round (2**n), m) | n <- [24 :: Double], m <- ms]
   where
     runN :: (Int, Int) -> IO ()
@@ -77,5 +77,7 @@ main = do
     range = (-100, 100)  -- range of vector elements
 
     downBy2 :: Int -> [Int]
-    downBy2 0 = []
-    downBy2 i = i : downBy2 (i `div` 2)
+    downBy2 0             = []
+    downBy2 1             = []
+    downBy2 i | i < 8     = i-1 : downBy2 (i-1)
+              | otherwise = i `div` 2 : downBy2 (i `div` 2)

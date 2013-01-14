@@ -1,8 +1,10 @@
-GHCBIN	?= $(HOME)/ghc/ghc-simd-build/inplace/bin
+GHCBIN	?= $(HOME)/ghc/ghc-simd-pldi-build/inplace/bin
 #GHCBIN	?= /5playpen/gmainlan/ghc-simd-build/inplace/bin
 GHC	?= $(GHCBIN)/ghc-stage2
 GHCPKG	?= $(GHCBIN)/ghc-pkg
 CABAL	?= $(GHCBIN)/ghc-cabal
+
+GOTOBLAS ?= $(HOME)/software/GotoBLAS2
 
 LLVMOPT = opt
 LLVMLLC = llc
@@ -27,6 +29,8 @@ GHCFLAGS+= \
 	-package time \
 	-package vector
 
+GHCFLAGS+=-I$(GOTOBLAS) $(GOTOBLAS)/libgoto2.a
+
 #GHCFLAGS+=-pgmlo=$(LLVMOPT) -pgmlc=$(LLVMLLC)
 #GHCFLAGS+=-optlc=--enable-tbaa=true
 #GHCFLAGS+=-optlo=-loop-unroll -optlo=-indvars -optlo=-loop-simplify 
@@ -41,6 +45,7 @@ GHCFLAGS+=-dcore-lint
 #GHCFLAGS+=-ddump-to-file
 #GHCFLAGS+=-dverbose-core2core
 #GHCFLAGS+=-ddump-cmmz
+#GHCFLAGS+=-ddump-asm
 #GHCFLAGS+=-ddump-llvm
 #GHCFLAGS+=-ddump-simpl
 #GHCFLAGS+=-ddump-simpl-iterations
@@ -77,14 +82,18 @@ clean :
 	find common examples tests benchmarks -name '*.dump-*' | xargs rm -f
 
 COMMON_SRC = \
+    common/Dotp/Double/CBlas.hs \
     common/Dotp/Double/cmanual.c \
     common/Dotp/Double/CManual.hs \
+    common/Dotp/Double/cscalar.c \
+    common/Dotp/Double/CScalar.hs \
     common/Dotp/Double/Dph.hs \
     common/Dotp/Double/DphMulti.hs \
     common/Dotp/Double/DphPA.hs \
     common/Dotp/Double/Manual.hs \
     common/Dotp/Double/Scalar.hs \
     common/Dotp/Double/Vector.hs \
+    common/Dotp/Float/CBlas.hs \
     common/Dotp/Float/cmanual.c \
     common/Dotp/Float/CManual.hs \
     common/Dotp/Float/cscalar.c \
@@ -94,6 +103,14 @@ COMMON_SRC = \
     common/Dotp/Float/Vector.hs \
     common/Saxpy/Float/Scalar.hs \
     common/Saxpy/Float/Vector.hs \
+    common/Rbf/Double/cmanual.c \
+    common/Rbf/Double/CManual.hs \
+    common/Rbf/Double/Vector.hs \
+    common/Sum/Double/cmanual.c \
+    common/Sum/Double/CManual.hs \
+    common/Sum/Double/cscalar.c \
+    common/Sum/Double/CScalar.hs \
+    common/Sum/Double/Manual.hs \
     common/Sum/Double/Scalar.hs \
     common/Sum/Double/Vector.hs \
     common/Sum/Float/cmanual.c \
@@ -148,4 +165,13 @@ par-bench : benchmarks/par-bench/Main.hs $(DOTP_SRC) $(INPLACE_PACKAGES)
 	$(LLVMOPT) -mem2reg $^ -o $@
 
 %.s : %.bc
-	$(LLVMLLC) -O1 -relocation-model=static $^ -o $@
+	$(LLVMLLC) -O3 -relocation-model=static $^ -o $@
+
+obj/seq-bench/Dotp/Double/Vector.bc : common/Dotp/Double/Vector.ll
+	$(LLVMOPT) $< -o $@ --enable-tbaa=true -O3
+
+obj/seq-bench/Dotp/Double/Vector.s : obj/seq-bench/Dotp/Double/Vector.bc
+	$(LLVMLLC) -O3 '-relocation-model=static' $< -o $@ --enable-tbaa=true
+
+obj/seq-bench/Dotp/Double/Vector.o : common/Dotp/Double/Vector.s
+	/usr/bin/gcc -fno-stack-protector -Wl,--hash-size=31 -Wl,--reduce-memory-overheads -DTABLES_NEXT_TO_CODE -c $< -o $@

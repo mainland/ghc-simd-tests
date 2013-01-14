@@ -28,6 +28,7 @@ import qualified Dotp.Float.Vector
 import qualified Dotp.Double.Scalar
 import qualified Dotp.Double.Manual
 import qualified Dotp.Double.CManual
+import qualified Dotp.Double.CBlas
 import qualified Dotp.Double.Vector
 
 import qualified Dotp.Double.Dph
@@ -36,6 +37,10 @@ import qualified Dotp.Double.DphMulti
 
 import qualified Sum.Int64.Scalar
 import qualified Sum.Int64.Vector
+
+import qualified Rbf.Double.CManual
+import qualified Rbf.Double.Vector
+import qualified Rbf.Double.Scalar
 
 nTRIALS :: Int
 nTRIALS = 100
@@ -51,6 +56,8 @@ main = do
 
     du :: U.Vector Double     <-  randomU n range
     dv :: U.Vector Double     <-  randomU n range
+    du2 :: U.Vector Double    <-  randomU n range2
+    dv2 :: U.Vector Double    <-  randomU n range2
     let dupa :: PArray Double =   fromUArray du
     let dvpa :: PArray Double =   fromUArray dv
 
@@ -62,6 +69,8 @@ main = do
     evaluate fv
     evaluate du
     evaluate dv
+    evaluate du2
+    evaluate dv2
     putStrLn "done."
     putStr "Converting to parallel arrays..."
     evaluate $ nf dupa
@@ -77,14 +86,23 @@ main = do
     printf "Scalar dot product (Double):                    %0.5f\n" (Dotp.Double.Scalar.dotp  du dv)
     printf "Hand-written Haskell SIMD dot product (Double): %0.5f\n" (Dotp.Double.Manual.dotp  du dv)
     printf "Hand-written C SIMD dot product (Double):       %0.5f\n" (Dotp.Double.CManual.dotp du dv)
+    printf "C BLAS dot product (Double):                    %0.5f\n" (Dotp.Double.CBlas.dotp du dv)
     printf "Vector library dot product (Double):            %0.5f\n" (Dotp.Double.Vector.dotp  du dv)
 
     printf "\n"
     printf "Scalar sum (Int64):         %d\n" (Sum.Int64.Scalar.sum i64u)
     printf "Vector library sum (Int64): %d\n" (Sum.Int64.Vector.sum i64u)
+
+    printf "\n"
+    printf "Scalar rbf (Double):         %0.8f\n" (Rbf.Double.Scalar.rbf  0.001 du2 dv2)
+    printf "Vector library rbf (Double): %0.8f\n" (Rbf.Double.Vector.rbf  0.001 du2 dv2)
+    printf "BLAS rbf (Double):           %0.8f\n" (Rbf.Double.CManual.rbf 0.001 du2 dv2)
   where
     n :: Int
     n = 10000     -- vector length
 
     range :: Num a => (a, a)
     range = (-100, 100)  -- range of vector elements
+
+    range2 :: Num a => (a, a)
+    range2 = (0, 1)
