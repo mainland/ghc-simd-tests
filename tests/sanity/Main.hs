@@ -39,6 +39,7 @@ import qualified Sum.Int64.Scalar
 import qualified Sum.Int64.Vector
 
 import qualified Rbf.Double.CManual
+import qualified Rbf.Double.CManualIntermediate
 import qualified Rbf.Double.Vector
 import qualified Rbf.Double.Scalar
 
@@ -94,9 +95,10 @@ main = do
     printf "Vector library sum (Int64): %d\n" (Sum.Int64.Vector.sum i64u)
 
     printf "\n"
-    printf "Scalar rbf (Double):         %0.8f\n" (Rbf.Double.Scalar.rbf  0.001 du2 dv2)
-    printf "Vector library rbf (Double): %0.8f\n" (Rbf.Double.Vector.rbf  0.001 du2 dv2)
-    printf "BLAS rbf (Double):           %0.8f\n" (Rbf.Double.CManual.rbf 0.001 du2 dv2)
+    printf "Scalar rbf (Double):              %0.8f\n" (Rbf.Double.Scalar.rbf  0.001 du2 dv2)
+    printf "Vector library rbf (Double):      %0.8f\n" (Rbf.Double.Vector.rbf  0.001 du2 dv2)
+    printf "BLAS rbf (Double):                %0.8f\n" (Rbf.Double.CManual.rbf 0.001 du2 dv2)
+    printf "BLAS rbf (intermediate) (Double): %0.8f\n" (Rbf.Double.CManualIntermediate.rbf 0.001 du2 dv2)
   where
     n :: Int
     n = 10000     -- vector length

@@ -28,6 +28,7 @@ import qualified Dotp.Double.CBlas
 import qualified Dotp.Double.Vector
 
 import qualified Rbf.Double.CManual
+import qualified Rbf.Double.CManualIntermediate
 import qualified Rbf.Double.Vector
 import qualified Rbf.Double.Scalar
 
@@ -72,6 +73,7 @@ main =
         runOne "rbf" "scalar"       n (uncurry (Rbf.Double.Scalar.rbf nu))  (fu2, fv2)
         runOne "rbf" "vector"       n (uncurry (Rbf.Double.Vector.rbf nu))  (fu2, fv2)
         runOne "rbf" "cmanual"      n (uncurry (Rbf.Double.CManual.rbf nu)) (fu2, fv2)
+        runOne "rbf" "cmanual_int"  n (uncurry (Rbf.Double.CManualIntermediate.rbf nu)) (fu2, fv2)
 
     runOne  ::  String
             ->  String

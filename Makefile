@@ -105,7 +105,9 @@ COMMON_SRC = \
     common/Saxpy/Float/Scalar.hs \
     common/Saxpy/Float/Vector.hs \
     common/Rbf/Double/cmanual.c \
+    common/Rbf/Double/cmanual_intermediate.c \
     common/Rbf/Double/CManual.hs \
+    common/Rbf/Double/CManualIntermediate.hs \
     common/Rbf/Double/Vector.hs \
     common/Sum/Double/cmanual.c \
     common/Sum/Double/CManual.hs \
