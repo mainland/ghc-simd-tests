@@ -77,6 +77,7 @@ clean :
 	rm -rf obj
 	rm -rf $(EXAMPLES)
 	rm -rf $(FIGS)
+	rm -f data/seq-bench.dat data/par-bench.dat
 	rm -rf multivector/dist
 	find common examples tests benchmarks -name '*.s' | xargs rm -f
 	find common examples tests benchmarks -name '*.ll' | xargs rm -f
@@ -109,6 +110,7 @@ COMMON_SRC = \
     common/Rbf/Double/CManual.hs \
     common/Rbf/Double/CManualIntermediate.hs \
     common/Rbf/Double/Vector.hs \
+    common/Rbf/Double/VectorAlt.hs \
     common/Sum/Double/cmanual.c \
     common/Sum/Double/CManual.hs \
     common/Sum/Double/cscalar.c \

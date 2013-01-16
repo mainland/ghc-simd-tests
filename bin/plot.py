@@ -228,15 +228,15 @@ def plotSeqPerformanceRatio(opts, func, data):
     plt.xlabel('Vector size (elements)')
     plt.ylabel('Execution Time Ratio')
 
-    
-
 def plotRbfPerformanceRatio(opts, func, data):
     CS = itertools.cycle(plotColors)
     HS = itertools.cycle(['//', 'xx', '..'])
     
     sets = [('cmanual', 'Goto BLAS 1.13'),
             ('scalar',  'Vector library'),
-            ('vector',  'Vector library (SSE)')]
+            ('vector',  'Vector library (SSE)'),
+            ('vector_alt', 'Vector library (SSE, alt)'),
+            ('cmanual_int', 'Goto BLAS 1.13 (w/intermediate)')]
 
     BASELINE = 'cmanual'
     

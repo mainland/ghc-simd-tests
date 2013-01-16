@@ -41,6 +41,7 @@ import qualified Sum.Int64.Vector
 import qualified Rbf.Double.CManual
 import qualified Rbf.Double.CManualIntermediate
 import qualified Rbf.Double.Vector
+import qualified Rbf.Double.VectorAlt
 import qualified Rbf.Double.Scalar
 
 nTRIALS :: Int
@@ -97,6 +98,7 @@ main = do
     printf "\n"
     printf "Scalar rbf (Double):              %0.8f\n" (Rbf.Double.Scalar.rbf  0.001 du2 dv2)
     printf "Vector library rbf (Double):      %0.8f\n" (Rbf.Double.Vector.rbf  0.001 du2 dv2)
+    printf "Vector library rbf alt (Double):  %0.8f\n" (Rbf.Double.VectorAlt.rbf  0.001 du2 dv2)
     printf "BLAS rbf (Double):                %0.8f\n" (Rbf.Double.CManual.rbf 0.001 du2 dv2)
     printf "BLAS rbf (intermediate) (Double): %0.8f\n" (Rbf.Double.CManualIntermediate.rbf 0.001 du2 dv2)
   where
