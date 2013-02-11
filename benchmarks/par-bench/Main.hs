@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
@@ -8,7 +7,7 @@ import Control.Concurrent (getNumCapabilities,
                            setNumCapabilities)
 import Control.Exception (evaluate)
 import Data.Array.Parallel (PArray)
-import "dph-lifted-vseg" Data.Array.Parallel.PArray (nf, fromUArray)
+import Data.Array.Parallel.PArray (nf, fromUArray)
 import qualified Data.Vector.Unboxed as U
 import System.IO (hFlush, stdout)
 import Text.Printf
