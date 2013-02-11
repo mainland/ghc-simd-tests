@@ -14,7 +14,7 @@ union f4v
 float cvecdotp(float* u, int ul, float* v, int vl)
 {
     int       n = ul < vl ? ul : vl;
-    union f4v f4s = {0.0, 0.0, 0.0, 0.0};
+    union f4v f4s = { .f = {0.0, 0.0, 0.0, 0.0} };
     float     s;
     int       i;
     int       m = n & (~VECTOR_SIZE);

@@ -39,10 +39,15 @@ import qualified Dotp.Double.DphMulti
 import qualified Sum.Int64.Scalar
 import qualified Sum.Int64.Vector
 
+import qualified Rbf.Double.Blitz
+import qualified Rbf.Double.Boost
 import qualified Rbf.Double.CManual
 import qualified Rbf.Double.CManualIntermediate
+import qualified Rbf.Double.Eigen
 import qualified Rbf.Double.Vector
-import qualified Rbf.Double.VectorAlt
+import qualified Rbf.Double.VectorAlt1
+import qualified Rbf.Double.VectorAlt2
+import qualified Rbf.Double.SALT
 import qualified Rbf.Double.Scalar
 
 nTRIALS :: Int
@@ -97,11 +102,17 @@ main = do
     printf "Vector library sum (Int64): %d\n" (Sum.Int64.Vector.sum i64u)
 
     printf "\n"
-    printf "Scalar rbf (Double):              %0.8f\n" (Rbf.Double.Scalar.rbf  0.001 du2 dv2)
-    printf "Vector library rbf (Double):      %0.8f\n" (Rbf.Double.Vector.rbf  0.001 du2 dv2)
-    printf "Vector library rbf alt (Double):  %0.8f\n" (Rbf.Double.VectorAlt.rbf  0.001 du2 dv2)
-    printf "BLAS rbf (Double):                %0.8f\n" (Rbf.Double.CManual.rbf 0.001 du2 dv2)
+    printf "Scalar rbf (Double):              %0.8f\n" (Rbf.Double.Scalar.rbf     0.001 du2 dv2)
+    printf "Vector library rbf (Double):      %0.8f\n" (Rbf.Double.Vector.rbf     0.001 du2 dv2)
+    printf "Vector library rbf2 (Double):     %0.8f\n" (Rbf.Double.VectorAlt1.rbf 0.001 du2 dv2)
+    printf "Vector library rbf3 (Double):     %0.8f\n" (Rbf.Double.VectorAlt2.rbf 0.001 du2 dv2)
+    printf "BLAS rbf (Double):                %0.8f\n" (Rbf.Double.CManual.rbf    0.001 du2 dv2)
     printf "BLAS rbf (intermediate) (Double): %0.8f\n" (Rbf.Double.CManualIntermediate.rbf 0.001 du2 dv2)
+    printf "Blitz rbf:                        %0.8f\n" (Rbf.Double.Blitz.rbf  0.001 du2 dv2)
+    printf "Boost uBLAS rbf:                  %0.8f\n" (Rbf.Double.Boost.rbf  0.001 du2 dv2)
+    printf "Eigen rbf:                        %0.8f\n" (Rbf.Double.Eigen.rbf  0.001 du2 dv2)
+    printf "Eigen rbf2:                       %0.8f\n" (Rbf.Double.Eigen.rbf2 0.001 du2 dv2)
+    printf "SALT rbf:                         %0.8f\n" (Rbf.Double.SALT.rbf   0.001 du2 dv2)
   where
     n :: Int
     n = 10000     -- vector length

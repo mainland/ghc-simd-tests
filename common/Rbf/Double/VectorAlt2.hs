@@ -5,7 +5,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Rbf.Double.VectorAlt (
+module Rbf.Double.VectorAlt2 (
     rbf
   ) where
 
@@ -15,7 +15,8 @@ import Vector
 
 rbf :: Double -> Vector Double -> Vector Double -> Double
 rbf nu x y =
-    exp (-nu * vsum (vmap square z))
+    exp (-nu * norm2 z)
   where
-    z         = vzipWith (-) x y
-    square x  = x * x
+    z        = vzipWith (-) x y
+    dot u v  = vsum (vzipWith (*) u v)
+    norm2 u  = dot u u

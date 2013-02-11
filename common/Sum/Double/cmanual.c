@@ -12,7 +12,7 @@ union d2v
 
 double c_vecdsum(double* u, int n)
 {
-    union d2v d2s = {0.0, 0.0};
+    union d2v d2s = { .f = {0.0, 0.0} };
     double    s;
     int       i;
     int       m = n & (~VECTOR_SIZE);

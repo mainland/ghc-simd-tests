@@ -4,7 +4,13 @@ GHC	?= $(GHCBIN)/ghc-stage2
 GHCPKG	?= $(GHCBIN)/ghc-pkg
 CABAL	?= $(GHCBIN)/ghc-cabal
 
+BLITZ    ?= external/blitz-0.10
+BOOST    ?= external/boost_1_53_0
+EIGEN    ?= external/eigen-eigen-5097c01bcdc4
+SALT     ?= external/SALT
 GOTOBLAS ?= $(HOME)/software/GotoBLAS2
+GCC      ?= $(HOME)/local/gcc-4.7.2-linux-x86_64/bin/gcc
+ICC      ?= icc
 
 LLVMOPT = opt
 LLVMLLC = llc
@@ -13,8 +19,17 @@ GHCFLAGS+=$(EXTRAGHCFLAGS)
 
 GHCFLAGS+=-Werror
 
+GHCFLAGS+=-pgmc $(GCC)
+GHCFLAGS+=-optc-O3 -optc-ftree-vectorize -optc-msse4 -optc-ffast-math -optc-funroll-loops -optc-mtune=corei7
+
+#GHCFLAGS+=-pgmc $(ICC) -pgml $(ICC)
+#GHCFLAGS+=-optc-O3 -optc-fast -optc-xhost
+
 GHCFLAGS+=-rtsopts -threaded -Odph
-GHCFLAGS+=-O2 -fllvm -optlo-O3 -optc-O3
+GHCFLAGS+=-O2 -fllvm
+GHCFLAGS+=-optlo-O3 -optlc-mcpu=corei7 -optlc-mattr=sse42
+#GHCFLAGS+=-optc-ggdb -optc-fverbose-asm
+#GHCFLAGS+=-optc-ftree-vectorizer-verbose=5
 #GHCFLAGS+=-fcpr-off -fno-liberate-case
 #GHCFLAGS+=-optc-march=corei7
 #GHCFLAGS+=-optc-march=amdfam10
@@ -29,7 +44,12 @@ GHCFLAGS+= \
 	-package time \
 	-package vector
 
+GHCFLAGS+=-I$(BLITZ)
+GHCFLAGS+=-I$(SALT)
+GHCFLAGS+=-I$(BOOST)
+GHCFLAGS+=-I$(EIGEN)
 GHCFLAGS+=-I$(GOTOBLAS) $(GOTOBLAS)/libgoto2.a
+GHCFLAGS+=-lstdc++
 
 #GHCFLAGS+=-pgmlo=$(LLVMOPT) -pgmlc=$(LLVMLLC)
 #GHCFLAGS+=-optlc=--enable-tbaa=true
@@ -44,8 +64,10 @@ GHCFLAGS+=-dcore-lint
 
 #GHCFLAGS+=-ddump-to-file
 #GHCFLAGS+=-dverbose-core2core
-#GHCFLAGS+=-ddump-cmmz
-#GHCFLAGS+=-ddump-asm
+#GHCFLAGS+=-ddump-cmm
+#GHCFLAGS+=-ddump-cmm-cfg
+#GHCFLAGS+=-ddump-cmm-proc
+GHCFLAGS+=-ddump-asm
 #GHCFLAGS+=-ddump-llvm
 #GHCFLAGS+=-ddump-simpl
 #GHCFLAGS+=-ddump-simpl-iterations
@@ -53,6 +75,7 @@ GHCFLAGS+=-dcore-lint
 #GHCFLAGS+=-ddump-stg
 #GHCFLAGS+=-ddump-prep
 GHCFLAGS+=-dsuppress-all -dppr-case-as-let -dppr-cols200
+#GHCFLAGS+=-ddump-rule-firings -ddump-rule-rewrites
 
 #GHCCOREFLAGS+=-ddump-occur-anal
 #GHCCOREFLAGS+=-ddump-rule-firings
@@ -105,12 +128,21 @@ COMMON_SRC = \
     common/Dotp/Float/Vector.hs \
     common/Saxpy/Float/Scalar.hs \
     common/Saxpy/Float/Vector.hs \
+    common/Rbf/Double/blitz.cpp \
+    common/Rbf/Double/boost.cpp \
     common/Rbf/Double/cmanual.c \
     common/Rbf/Double/cmanual_intermediate.c \
+    common/Rbf/Double/eigen.cpp \
+    common/Rbf/Double/salt.cpp \
+    common/Rbf/Double/Blitz.hs \
+    common/Rbf/Double/Boost.hs \
     common/Rbf/Double/CManual.hs \
     common/Rbf/Double/CManualIntermediate.hs \
+    common/Rbf/Double/Eigen.hs \
+    common/Rbf/Double/SALT.hs \
     common/Rbf/Double/Vector.hs \
-    common/Rbf/Double/VectorAlt.hs \
+    common/Rbf/Double/VectorAlt1.hs \
+    common/Rbf/Double/VectorAlt2.hs \
     common/Sum/Double/cmanual.c \
     common/Sum/Double/CManual.hs \
     common/Sum/Double/cscalar.c \
@@ -174,14 +206,17 @@ par-bench : benchmarks/par-bench/Main.hs $(DOTP_SRC) $(INPLACE_PACKAGES)
 %.s : %.bc
 	$(LLVMLLC) -O3 -relocation-model=static $^ -o $@
 
-obj/seq-bench/Dotp/Double/Vector.bc : common/Dotp/Double/Vector.ll
-	$(LLVMOPT) $< -o $@ --enable-tbaa=true -O3
+# obj/seq-bench/Dotp/Double/Vector.bc : common/Dotp/Double/Vector.ll
+# 	$(LLVMOPT) $< -o $@ --enable-tbaa=true -O3
 
-obj/seq-bench/Dotp/Double/Vector.s : obj/seq-bench/Dotp/Double/Vector.bc
-	$(LLVMLLC) -O3 '-relocation-model=static' $< -o $@ --enable-tbaa=true
+# obj/seq-bench/Dotp/Double/Vector.s : obj/seq-bench/Dotp/Double/Vector.bc
+# 	$(LLVMLLC) -O3 '-relocation-model=static' $< -o $@ --enable-tbaa=true -mattr=+sse2
 
-obj/seq-bench/Dotp/Double/Vector.o : common/Dotp/Double/Vector.s
-	/usr/bin/gcc -fno-stack-protector -Wl,--hash-size=31 -Wl,--reduce-memory-overheads -DTABLES_NEXT_TO_CODE -c $< -o $@
+# obj/seq-bench/Dotp/Double/Vector.o : common/Dotp/Double/Vector.s
+# 	$(GCC) -fno-stack-protector -Wl,--hash-size=31 -Wl,--reduce-memory-overheads -DTABLES_NEXT_TO_CODE -x assembler-with-cpp -c $< -o $@
+
+obj/seq-bench/Rbf/Double/Vector.o : common/Rbf/Double/Vector.ll
+	 $(GHC) $(GHCFLAGS) -v -c $< -o $@
 
 #
 # Figures
@@ -201,16 +236,16 @@ FIGS = \
 figs : $(FIGS)
 
 data/seq-bench.dat : seq-bench
-	./seq-bench >$@
+	./seq-bench rbf >$@
 
 data/par-bench.dat : par-bench
-	./par-bench >$@
+	./par-bench +RTS -N8 >$@
 
 figs/dotp-serial.pdf : data/seq-bench.dat $(PLOT)
 	$(PLOT) --dotp $< -o $@
 
 figs/dotp-serial-ratio.pdf : data/seq-bench.dat $(PLOT)
-	$(PLOT) --dotp --ratio $< -o $@
+	$(PLOT) --dotp --ratio --ymax 3 $< -o $@
 
 figs/dotp-serial-ratio-1.pdf : data/seq-bench.dat $(PLOT)
 	$(PLOT) --dotp --ratio --nsets 1 $< -o $@
@@ -219,10 +254,18 @@ figs/dotp-serial-ratio-2.pdf : data/seq-bench.dat $(PLOT)
 	$(PLOT) --dotp --ratio --nsets 2 $< -o $@
 
 figs/rbf-serial-ratio.pdf : data/seq-bench.dat $(PLOT)
-	$(PLOT) --rbf --ratio $< -o $@
+	$(PLOT) --rbf --ratio --alt 4 --legend-fontsize 9 --ymax 2 $< -o $@
 
 figs/dotp-parallel.pdf : data/par-bench.dat $(PLOT)
 	$(PLOT) --par-dotp $< -o $@
 
 figs/dotp-parallel-ratio.pdf : data/par-bench.dat $(PLOT)
-	$(PLOT) --par-dotp --ratio $< --ymin 0 --ymax 1.5 -o $@
+	$(PLOT) --par-dotp --ratio $< --ymin 0 --ymax 2.0 -o $@
+
+figs/rbf-mflops-slow.png : $(PLOT)
+	$(PLOT) --rbf --legend-fontsize 9 -o $@ \
+		data/2013-02-07/seq-bench-home-gcc.dat data/2013-02-07/seq-bench-home-icc.dat
+
+figs/rbf-mflops-fast.png : $(PLOT)
+	$(PLOT) --rbf --legend-fontsize 9 --alt 1 -o $@ \
+		data/2013-02-07/seq-bench-home-gcc.dat data/2013-02-07/seq-bench-home-icc.dat

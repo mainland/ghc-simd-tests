@@ -12,7 +12,7 @@ union f4v
 
 float cvecsum(float* u, int n)
 {
-    union f4v f4s = {0.0, 0.0, 0.0, 0.0};
+    union f4v f4s = { .f = {0.0, 0.0, 0.0, 0.0} };
     float     s;
     int       i;
     int       m = n & (~VECTOR_SIZE);

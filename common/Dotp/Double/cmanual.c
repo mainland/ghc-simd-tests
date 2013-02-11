@@ -14,7 +14,7 @@ union d2v
 double cdvecdotp(double* u, int ul, double* v, int vl)
 {
     int       n = ul < vl ? ul : vl;
-    union d2v d2s = {0.0, 0.0};
+    union d2v d2s = { .d = {0.0, 0.0} };
     double    s;
     int       i;
     int       m = n & (~VECTOR_SIZE);

@@ -5,7 +5,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Rbf.Double.VectorAlt (
+module Rbf.Double.VectorAlt1 (
     rbf
   ) where
 
