@@ -7,7 +7,7 @@ module Main where
 
 import GHC.Prim
 
-import Data.Primitive.Multi.FloatX4
+import Data.Primitive.Multi.Types
 
 main :: IO ()
 main = do
