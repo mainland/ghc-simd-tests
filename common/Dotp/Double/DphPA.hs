@@ -9,8 +9,6 @@ import Data.Array.Parallel
 import Data.Array.Parallel.Prelude
 import qualified Data.Array.Parallel.Prelude.Double as D
 
-import qualified Prelude
-
 dotp :: PArray Double -> PArray Double -> Double
 {-# NOINLINE dotp #-}
 dotp v w = dotp' (fromPArrayP v) (fromPArrayP w)
