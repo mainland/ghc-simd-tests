@@ -10,7 +10,7 @@ union d2v
   double f[2];
 };
 
-double c_dsum(double* u, int n)
+double c_vecdsum(double* u, int n)
 {
     union d2v d2s = {0.0, 0.0};
     double    s;

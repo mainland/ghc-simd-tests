@@ -9,10 +9,11 @@ module Dotp.Float.Manual (
   ) where
 
 import Data.Primitive.Multi
-import qualified Data.Vector.Unboxed as U
 
-dotp :: U.Vector Float -> U.Vector Float -> Float
-dotp u v | U.length u /= U.length v =
+import qualified Vector as V
+
+dotp :: V.Vector Float -> V.Vector Float -> Float
+dotp u v | V.length u /= V.length v =
     error "dotp: vectors of different lengths"
 
 dotp u v =
@@ -22,7 +23,7 @@ dotp u v =
     m = multiplicity (undefined :: Multi Float)
 
     n, k :: Int
-    n = min (U.length u) (U.length v)
+    n = min (V.length u) (V.length v)
     k = n - n `rem` m
 
     loop :: Multi Float -> Int -> Float
@@ -34,8 +35,8 @@ dotp u v =
         loop (z + x*y) (i+m)
       where
         x, y :: Multi Float
-        x = U.munsafeIndex u i
-        y = U.munsafeIndex v i
+        x = V.munsafeIndex u i
+        y = V.munsafeIndex v i
 
     loop1 :: Float -> Int -> Float
     {-# INLINE loop1 #-}
@@ -46,8 +47,8 @@ dotp u v =
         loop1 (z + x*y) (i+1)
       where
         x, y :: Float
-        x = U.unsafeIndex u i
-        y = U.unsafeIndex v i
+        x = V.unsafeIndex u i
+        y = V.unsafeIndex v i
 
     reduce :: Multi Float -> Float
     {-# INLINE reduce #-}

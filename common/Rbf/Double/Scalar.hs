@@ -10,12 +10,12 @@ module Rbf.Double.Scalar (
   ) where
 
 import Data.Primitive.Multi
-import qualified Data.Vector.Generic as G
-import qualified Data.Vector.Unboxed as U
 
-rbf :: Double -> U.Vector Double -> U.Vector Double -> Double
+import qualified Vector as V
+
+rbf :: Double -> V.Vector Double -> V.Vector Double -> Double
 rbf nu v w =
-    exp (-nu * U.sum (U.zipWith norm v w))
+    exp (-nu * V.sum (V.zipWith norm v w))
   where
     square x = x * x
     norm x y = square (x-y)

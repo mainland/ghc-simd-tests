@@ -8,9 +8,8 @@ import Foreign (sizeOf)
 import System.IO (hFlush, stdout)
 import Text.Printf
 
-import qualified Data.Vector.Unboxed as U
+import qualified Vector as V
 
-import Util.Random
 import Util.Benchmark
 
 import qualified Sum.Double.Scalar
@@ -42,11 +41,11 @@ main =
     runN :: Int -> IO ()
     runN n = do
         -- generate random input vectors
-        fu :: U.Vector Double <-  randomU n range
-        fv :: U.Vector Double <-  randomU n range
+        fu :: V.Vector Double <-  V.randomVector n range
+        fv :: V.Vector Double <-  V.randomVector n range
 
-        fu2 :: U.Vector Double <-  randomU n range2
-        fv2 :: U.Vector Double <-  randomU n range2
+        fu2 :: V.Vector Double <-  V.randomVector n range2
+        fv2 :: V.Vector Double <-  V.randomVector n range2
 
         -- putStr "Generating random vectors..."
         hFlush stdout

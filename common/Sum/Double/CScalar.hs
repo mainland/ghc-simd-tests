@@ -11,24 +11,22 @@ import Data.Primitive.Addr
 import Data.Primitive.ByteArray
 import Data.Primitive (sizeOf)
 import qualified Data.Vector.Primitive as P
-import qualified Data.Vector.Unboxed as U
-
 import Foreign.C
+import Foreign.ForeignPtr (ForeignPtr)
+import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.Ptr
-
 import GHC.Ptr
-
 import System.IO.Unsafe (unsafePerformIO)
 
-import Util.Unsafe
+import qualified Vector as V
 
-foreign import ccall "cdsum" c_dsum :: Ptr CDouble -> CInt -> CDouble
+foreign import ccall "c_dsum" c_dsum :: Ptr Double -> CInt -> CDouble
 
-sum :: U.Vector Double -> Double
+sum :: V.Vector Double -> Double
 {-# INLINE sum #-}
 sum u =
     (fromRational . toRational) (c_dsum up ul)
   where
-    up :: Ptr CDouble
+    up :: Ptr Double
     ul :: CInt
-    (up, ul) = unsafeDoubleUVectorToPtr u
+    (up, ul) = V.unsafeToPtrLen u

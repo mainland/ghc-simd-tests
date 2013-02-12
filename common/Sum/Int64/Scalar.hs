@@ -7,7 +7,7 @@ module Sum.Int64.Scalar (
 import Data.Int
 import Prelude hiding (sum)
 
-import qualified Data.Vector.Unboxed as U
+import qualified Vector as V
 
-sum :: U.Vector Int64 -> Int64
-sum v = U.foldl' (+) 0 v
+sum :: V.Vector Int64 -> Int64
+sum v = V.foldl' (+) 0 v

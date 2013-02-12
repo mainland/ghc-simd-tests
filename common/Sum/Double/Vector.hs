@@ -10,12 +10,13 @@ module Sum.Double.Vector (
 import Prelude hiding (sum)
 
 import Data.Primitive.Multi
-import qualified Data.Vector.Unboxed as U
 
-sum :: U.Vector Double -> Double
+import qualified Vector as V
+
+sum :: V.Vector Double -> Double
 sum v =
     multifold (+) s ms
   where
-    (s, ms) = U.mfoldl' plus1 plusm (0, 0) v
+    (s, ms) = V.mfoldl' plus1 plusm (0, 0) v
     plusm (x, mx) my = (x, mx + my)
     plus1 (x, mx) y  = (x + y, mx)

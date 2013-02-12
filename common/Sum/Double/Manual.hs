@@ -12,9 +12,10 @@ module Sum.Double.Manual (
 import Prelude hiding (sum)
 
 import Data.Primitive.Multi
-import qualified Data.Vector.Unboxed as U
 
-sum :: U.Vector Double -> Double
+import qualified Vector as V
+
+sum :: V.Vector Double -> Double
 sum u =
     n `seq` k `seq` m `seq` loop 0 0
   where
@@ -22,7 +23,7 @@ sum u =
     m = multiplicity (undefined :: Multi Double)
 
     n, k :: Int
-    n = U.length u
+    n = V.length u
     k = n - n `rem` m
 
     loop :: Multi Double -> Int -> Double
@@ -34,7 +35,7 @@ sum u =
         loop (z + x) (i+m)
       where
         x :: Multi Double
-        x = U.munsafeIndex u i
+        x = V.munsafeIndex u i
 
     loop1 :: Double -> Int -> Double
     {-# INLINE loop1 #-}
@@ -45,7 +46,7 @@ sum u =
         loop1 (z + x) (i+1)
       where
         x :: Double
-        x = U.unsafeIndex u i
+        x = V.unsafeIndex u i
 
     reduce :: Multi Double -> Double
     {-# INLINE reduce #-}

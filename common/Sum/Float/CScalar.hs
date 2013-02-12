@@ -10,25 +10,22 @@ import Prelude hiding (sum)
 import Data.Primitive.Addr
 import Data.Primitive.ByteArray
 import Data.Primitive (sizeOf)
-import qualified Data.Vector.Primitive as P
-import qualified Data.Vector.Unboxed as U
-
 import Foreign.C
+import Foreign.ForeignPtr (ForeignPtr)
+import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.Ptr
-
 import GHC.Ptr
-
 import System.IO.Unsafe (unsafePerformIO)
 
-import Util.Unsafe
+import qualified Vector as V
 
-foreign import ccall "csum" c_sum :: Ptr CFloat -> CInt -> CFloat
+foreign import ccall "csum" c_sum :: Ptr Float -> CInt -> CFloat
 
-sum :: U.Vector Float -> Float
+sum :: V.Vector Float -> Float
 {-# INLINE sum #-}
 sum u =
     (fromRational . toRational) (c_sum up ul)
   where
-    up :: Ptr CFloat
+    up :: Ptr Float
     ul :: CInt
-    (up, ul) = unsafeFloatUVectorToPtr u
+    (up, ul) = V.unsafeToPtrLen u

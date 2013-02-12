@@ -12,9 +12,10 @@ module Sum.Float.Manual (
 import Prelude hiding (sum)
 
 import Data.Primitive.Multi
-import qualified Data.Vector.Unboxed as U
 
-sum :: U.Vector Float -> Float
+import qualified Vector as V
+
+sum :: V.Vector Float -> Float
 sum u =
     n `seq` k `seq` m `seq` loop 0 0
   where
@@ -22,7 +23,7 @@ sum u =
     m = multiplicity (undefined :: Multi Float)
 
     n, k :: Int
-    n = U.length u
+    n = V.length u
     k = n - n `rem` m
 
     loop :: Multi Float -> Int -> Float
@@ -34,7 +35,7 @@ sum u =
         loop (z + x) (i+m)
       where
         x :: Multi Float
-        x = U.munsafeIndex u i
+        x = V.munsafeIndex u i
 
     loop1 :: Float -> Int -> Float
     {-# INLINE loop1 #-}
@@ -45,7 +46,7 @@ sum u =
         loop1 (z + x) (i+1)
       where
         x :: Float
-        x = U.unsafeIndex u i
+        x = V.unsafeIndex u i
 
     reduce :: Multi Float -> Float
     {-# INLINE reduce #-}

@@ -8,8 +8,9 @@ module Dotp.Float.Vector (
   ) where
 
 import Data.Primitive.Multi
-import qualified Data.Vector.Unboxed as U
 
-dotp :: U.Vector Float -> U.Vector Float -> Float
+import qualified Vector as V
+
+dotp :: V.Vector Float -> V.Vector Float -> Float
 dotp v w =
-    U.mfold' (+) (+) 0 $ U.mzipWith (*) (*) v w
+    V.vfold (+) 0 (V.vzipWith (*) v w)

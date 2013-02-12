@@ -1,4 +1,4 @@
-GHCBIN	?= $(HOME)/ghc/ghc-simd-pldi-build/inplace/bin
+GHCBIN	?= $(HOME)/ghc/ghc-simd-build/inplace/bin
 #GHCBIN	?= /5playpen/gmainlan/ghc-simd-build/inplace/bin
 GHC	?= $(GHCBIN)/ghc-stage2
 GHCPKG	?= $(GHCBIN)/ghc-pkg
@@ -128,9 +128,11 @@ COMMON_SRC = \
     common/Sum/Int64/Scalar.hs \
     common/Sum/Int64/Vector.hs \
     common/Util/Benchmark.hs \
+    common/Util/MmMalloc.c \
+    common/Util/MmMalloc.hs \
     common/Util/Random.hs \
     common/Util/Statistics.hs \
-    common/Util/Unsafe.hs
+    common/Vector.hs
 
 prim : examples/prim/Main.hs
 	$(GHC) $(GHCFLAGS) $< \

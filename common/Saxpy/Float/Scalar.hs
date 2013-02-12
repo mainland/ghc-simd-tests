@@ -2,8 +2,8 @@ module Saxpy.Float.Scalar (
     saxpy
   ) where
 
-import qualified Data.Vector.Unboxed as U
+import qualified Vector as V
 
-saxpy :: Float -> U.Vector Float -> U.Vector Float -> U.Vector Float
+saxpy :: Float -> V.Vector Float -> V.Vector Float -> V.Vector Float
 saxpy a xs ys =
-    U.zipWith (\x y -> a*x + y) xs ys
+    V.zipWith (\x y -> a*x + y) xs ys

@@ -6,7 +6,7 @@ module Sum.Float.Scalar (
 
 import Prelude hiding (sum)
 
-import qualified Data.Vector.Unboxed as U
+import qualified Vector as V
 
-sum :: U.Vector Float -> Float
-sum v = U.foldl' (+) 0 v
+sum :: V.Vector Float -> Float
+sum v = V.foldl' (+) 0 v

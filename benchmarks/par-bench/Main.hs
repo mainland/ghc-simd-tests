@@ -7,12 +7,12 @@ import Control.Concurrent (getNumCapabilities,
                            setNumCapabilities)
 import Control.Exception (evaluate)
 import Data.Array.Parallel (PArray)
-import Data.Array.Parallel.PArray (nf, fromUArray)
-import qualified Data.Vector.Unboxed as U
+import Data.Array.Parallel.PArray (nf)
 import System.IO (hFlush, stdout)
 import Text.Printf
 
-import Util.Random
+import qualified Vector as V
+
 import Util.Benchmark
 
 import qualified Dotp.Double.Scalar
@@ -36,10 +36,10 @@ main = do
     runN :: (Int, Int) -> IO ()
     runN (n, m) = do
         -- generate random input vectors
-        du :: U.Vector Double      <-  randomU n range
-        dv :: U.Vector Double      <-  randomU n range
-        let dupa :: PArray Double  =   fromUArray du
-        let dvpa :: PArray Double  =   fromUArray dv
+        du :: V.Vector Double      <-  V.randomVector n range
+        dv :: V.Vector Double      <-  V.randomVector n range
+        let dupa :: PArray Double  =   V.toPArray du
+        let dvpa :: PArray Double  =   V.toPArray dv
 
         -- putStr "Generating random vectors..."
         hFlush stdout

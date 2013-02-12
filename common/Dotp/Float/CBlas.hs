@@ -5,21 +5,21 @@ module Dotp.Float.CBlas (
     dotp
   ) where
 
-import qualified Data.Vector.Unboxed as U
-
 import Foreign.C
+import Foreign.ForeignPtr (ForeignPtr)
+import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.Ptr
 
-import Util.Unsafe
+import qualified Vector as V
 
-foreign import ccall "cblas_sdot" cblas_sdot :: CInt -> Ptr CFloat -> CInt -> Ptr CFloat -> CInt -> CFloat
+foreign import ccall "cblas_sdot" cblas_sdot :: CInt -> Ptr Float -> CInt -> Ptr Float -> CInt -> CFloat
 
-dotp :: U.Vector Float -> U.Vector Float -> Float
+dotp :: V.Vector Float -> V.Vector Float -> Float
 {-# INLINE dotp #-}
 dotp u v =
     (fromRational . toRational) (cblas_sdot (min ul vl) up 1 vp 1)
   where
-    up, vp :: Ptr CFloat
+    up, vp :: Ptr Float
     ul, vl :: CInt
-    (up, ul) = unsafeFloatUVectorToPtr u
-    (vp, vl) = unsafeFloatUVectorToPtr v
+    (up, ul) = V.unsafeToPtrLen u
+    (vp, vl) = V.unsafeToPtrLen v

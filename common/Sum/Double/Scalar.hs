@@ -6,7 +6,7 @@ module Sum.Double.Scalar (
 
 import Prelude hiding (sum)
 
-import qualified Data.Vector.Unboxed as U
+import qualified Vector as V
 
-sum :: U.Vector Double -> Double
-sum v = U.foldl' (+) 0 v
+sum :: V.Vector Double -> Double
+sum v = V.foldl' (+) 0 v

@@ -5,13 +5,14 @@
 module Main where
 
 import Control.Exception (evaluate)
-import Data.Array.Parallel
-import Data.Array.Parallel.PArray (nf, fromUArray)
+import Data.Array.Parallel (PArray)
+import Data.Array.Parallel.PArray (nf)
 import Data.Int
-import qualified Data.Vector.Unboxed as U
 import System.IO (hFlush, stdout)
 import System.Random (newStdGen, randomR)
 import Text.Printf
+
+import qualified Vector as V
 
 import Util.Random
 import Util.Statistics
@@ -53,17 +54,17 @@ main = do
     g                         <-  newStdGen
 
     let fa :: Float           =   fst (randomR range g)
-    fu :: U.Vector Float      <-  randomU n range
-    fv :: U.Vector Float      <-  randomU n range
+    fu :: V.Vector Float      <-  V.randomVector n range
+    fv :: V.Vector Float      <-  V.randomVector n range
 
-    du :: U.Vector Double     <-  randomU n range
-    dv :: U.Vector Double     <-  randomU n range
-    du2 :: U.Vector Double    <-  randomU n range2
-    dv2 :: U.Vector Double    <-  randomU n range2
-    let dupa :: PArray Double =   fromUArray du
-    let dvpa :: PArray Double =   fromUArray dv
+    du :: V.Vector Double     <-  V.randomVector n range
+    dv :: V.Vector Double     <-  V.randomVector n range
+    du2 :: V.Vector Double    <-  V.randomVector n range2
+    dv2 :: V.Vector Double    <-  V.randomVector n range2
+    let dupa :: PArray Double =   V.toPArray du
+    let dvpa :: PArray Double =   V.toPArray dv
 
-    i64u :: U.Vector Int64    <-  randomU n range
+    i64u :: V.Vector Int64    <-  V.randomVector n range
 
     putStr "Generating random vectors..."
     hFlush stdout

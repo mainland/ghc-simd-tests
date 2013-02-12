@@ -2,8 +2,8 @@ module Dotp.Double.Scalar (
     dotp
   ) where
 
-import qualified Data.Vector.Unboxed as U
+import qualified Vector as V
 
-dotp :: U.Vector Double -> U.Vector Double -> Double
+dotp :: V.Vector Double -> V.Vector Double -> Double
 dotp v w =
-    U.sum $ U.zipWith (*) v w
+    V.sum $ V.zipWith (*) v w

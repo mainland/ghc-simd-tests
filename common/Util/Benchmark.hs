@@ -22,8 +22,6 @@ import Data.Primitive.Addr
 import Data.Primitive.ByteArray
 import Data.Primitive (sizeOf)
 import Data.Time.Clock.POSIX (getPOSIXTime)
-import qualified Data.Vector.Primitive as P
-import qualified Data.Vector.Unboxed as U
 import Text.Printf
 
 timeBenchmark :: Int

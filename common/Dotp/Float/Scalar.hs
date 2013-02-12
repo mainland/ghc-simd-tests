@@ -2,8 +2,8 @@ module Dotp.Float.Scalar (
     dotp
   ) where
 
-import qualified Data.Vector.Unboxed as U
+import qualified Vector as V
 
-dotp :: U.Vector Float -> U.Vector Float -> Float
+dotp :: V.Vector Float -> V.Vector Float -> Float
 dotp v w =
-    U.sum $ U.zipWith (*) v w
+    V.sum $ V.zipWith (*) v w

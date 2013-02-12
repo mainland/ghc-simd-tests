@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-double cdsum(double* u, int n)
+double c_dsum(double* u, int n)
 {
     double* end = u + n;
     double  s = 0.0;
