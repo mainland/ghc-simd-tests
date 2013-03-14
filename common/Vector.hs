@@ -3,7 +3,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-#define STORABLE 0
+#define STORABLE 1
 
 module Vector (
 #if STORABLE

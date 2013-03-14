@@ -45,7 +45,7 @@ nTRIALS = 100
 main :: IO ()
 main = do
     args <- getArgs
-    mapM_ (runN args) (map (round . (2**)) [12..24 :: Float])
+    mapM_ (runN args) (map (round . (2**)) [1..24 :: Float])
   where
     runN :: [String] -> Int -> IO ()
     runN args n = do
