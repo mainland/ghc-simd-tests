@@ -6,8 +6,10 @@ module Main where
 import Control.Concurrent (getNumCapabilities,
                            setNumCapabilities)
 import Control.Exception (evaluate)
+import Control.Monad (when)
 import Data.Array.Parallel (PArray)
 import Data.Array.Parallel.PArray (nf)
+import System.Environment (getArgs)
 import System.IO (hFlush, stdout)
 import Text.Printf
 
@@ -28,13 +30,14 @@ nTRIALS = 100
 
 main :: IO ()
 main = do
+    args  <- getArgs
     m_max <- getNumCapabilities
     let ms | m_max == 1 = [1]
            | otherwise  = m_max : m_max-1 : downBy2 m_max
-    mapM_ runN [(round (2**n), m) | n <- [24 :: Double], m <- ms]
+    mapM_ (runN args) [(round (2**n), m) | n <- [24 :: Double], m <- ms]
   where
-    runN :: (Int, Int) -> IO ()
-    runN (n, m) = do
+    runN :: [String] -> (Int, Int) -> IO ()
+    runN args (n, m) = do
         -- generate random input vectors
         du :: V.Vector Double      <-  V.randomVector n range
         dv :: V.Vector Double      <-  V.randomVector n range
@@ -53,13 +56,14 @@ main = do
 
         setNumCapabilities m
 
-        runOne "dotp" "scalar"      n m (uncurry Dotp.Double.Scalar.dotp)   (du, dv)
-        runOne "dotp" "manual"      n m (uncurry Dotp.Double.Manual.dotp)   (du, dv)
-        runOne "dotp" "cmanual"     n m (uncurry Dotp.Double.CManual.dotp)  (du, dv)
-        runOne "dotp" "vector"      n m (uncurry Dotp.Double.Vector.dotp)   (du, dv)
-        runOne "dotp" "dph"         n m (uncurry Dotp.Double.Dph.dotp)      (dupa, dvpa)
-        runOne "dotp" "dphpa"       n m (uncurry Dotp.Double.DphPA.dotp)    (dupa, dvpa)
-        runOne "dotp" "dphmulti"    n m (uncurry Dotp.Double.DphMulti.dotp) (dupa, dvpa)
+        when (null args || "dotp" `elem` args) $ do
+            runOne "dotp" "scalar"      n m (uncurry Dotp.Double.Scalar.dotp)   (du, dv)
+            runOne "dotp" "manual"      n m (uncurry Dotp.Double.Manual.dotp)   (du, dv)
+            runOne "dotp" "cmanual"     n m (uncurry Dotp.Double.CManual.dotp)  (du, dv)
+            runOne "dotp" "vector"      n m (uncurry Dotp.Double.Vector.dotp)   (du, dv)
+            runOne "dotp" "dph"         n m (uncurry Dotp.Double.Dph.dotp)      (dupa, dvpa)
+            runOne "dotp" "dphpa"       n m (uncurry Dotp.Double.DphPA.dotp)    (dupa, dvpa)
+            runOne "dotp" "dphmulti"    n m (uncurry Dotp.Double.DphMulti.dotp) (dupa, dvpa)
 
     runOne  ::  String
             ->  String

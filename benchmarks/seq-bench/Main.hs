@@ -43,13 +43,12 @@ nTRIALS :: Int
 nTRIALS = 100
 
 main :: IO ()
-main =
-    mapM_ runN (map (round . (2**)) [12..24 :: Float])
+main = do
+    args <- getArgs
+    mapM_ (runN args) (map (round . (2**)) [12..24 :: Float])
   where
-    runN :: Int -> IO ()
-    runN n = do
-        args <- getArgs
-
+    runN :: [String] -> Int -> IO ()
+    runN args n = do
         -- generate random input vectors
         fu :: V.Vector Double <-  V.randomVector n range
         fv :: V.Vector Double <-  V.randomVector n range
