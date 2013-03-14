@@ -19,12 +19,12 @@ import System.IO.Unsafe (unsafePerformIO)
 
 import qualified Vector as V
 
-foreign import ccall "c_vecdsum" c_vecdsum :: Ptr Double -> CInt -> CDouble
+foreign import ccall unsafe "c_vecdsum" c_vecdsum :: Ptr Double -> CInt -> CDouble
 
 sum :: V.Vector Double -> Double
 {-# INLINE sum #-}
 sum u =
-    (fromRational . toRational) (c_vecdsum up ul)
+    realToFrac (c_vecdsum up ul)
   where
     up :: Ptr Double
     ul :: CInt

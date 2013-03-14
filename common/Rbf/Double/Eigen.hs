@@ -11,14 +11,13 @@ import Foreign.Ptr
 
 import Vector
 
-foreign import ccall "eigen_rbf"  eigen_rbf :: CDouble -> Ptr Double -> CInt -> Ptr Double -> CInt -> CDouble
-foreign import ccall "eigen_rbf2" eigen_rbf2 :: CDouble -> Ptr Double -> CInt -> Ptr Double -> CInt -> CDouble
+foreign import ccall unsafe "eigen_rbf"  eigen_rbf :: CDouble -> Ptr Double -> CInt -> Ptr Double -> CInt -> CDouble
+foreign import ccall unsafe "eigen_rbf2" eigen_rbf2 :: CDouble -> Ptr Double -> CInt -> Ptr Double -> CInt -> CDouble
 
 rbf :: Double -> Vector Double -> Vector Double -> Double
 {-# INLINE rbf #-}
 rbf nu u v =
-    (fromRational . toRational)
-      (eigen_rbf ((fromRational . toRational) nu) up ul vp vl)
+    realToFrac (eigen_rbf (realToFrac nu) up ul vp vl)
   where
     up, vp :: Ptr Double
     ul, vl :: CInt
@@ -28,8 +27,7 @@ rbf nu u v =
 rbf2 :: Double -> Vector Double -> Vector Double -> Double
 {-# INLINE rbf2 #-}
 rbf2 nu u v =
-    (fromRational . toRational)
-    (eigen_rbf2 ((fromRational . toRational) nu) up ul vp vl)
+    realToFrac (eigen_rbf2 (realToFrac nu) up ul vp vl)
   where
     up, vp :: Ptr Double
     ul, vl :: CInt

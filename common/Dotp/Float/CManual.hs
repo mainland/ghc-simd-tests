@@ -10,12 +10,12 @@ import Foreign.Ptr
 
 import qualified Vector as V
 
-foreign import ccall "cvecdotp" c_vecdotp :: Ptr Float -> CInt -> Ptr Float -> CInt -> CFloat
+foreign import ccall unsafe "cvecdotp" c_vecdotp :: Ptr Float -> CInt -> Ptr Float -> CInt -> CFloat
 
 dotp :: V.Vector Float -> V.Vector Float -> Float
 {-# INLINE dotp #-}
 dotp u v =
-    (fromRational . toRational) (c_vecdotp up ul vp vl)
+    realToFrac (c_vecdotp up ul vp vl)
   where
     up, vp :: Ptr Float
     ul, vl :: CInt

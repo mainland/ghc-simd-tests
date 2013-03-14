@@ -10,13 +10,12 @@ import Foreign.Ptr
 
 import Vector
 
-foreign import ccall "boost_rbf" boost_rbf :: CDouble -> Ptr Double -> CInt -> Ptr Double -> CInt -> CDouble
+foreign import ccall unsafe "boost_rbf" boost_rbf :: CDouble -> Ptr Double -> CInt -> Ptr Double -> CInt -> CDouble
 
 rbf :: Double -> Vector Double ->Vector Double -> Double
 {-# INLINE rbf #-}
 rbf nu u v =
-    (fromRational . toRational)
-      (boost_rbf ((fromRational . toRational) nu) up ul vp vl)
+    realToFrac (boost_rbf (realToFrac nu) up ul vp vl)
   where
     up, vp :: Ptr Double
     ul, vl :: CInt
