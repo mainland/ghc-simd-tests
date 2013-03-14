@@ -5,25 +5,26 @@
 
 using namespace Eigen;
 
-//#if !defined(__GNU__)
-#define __builtin_assume_aligned(x,y) x
-//#endif
+template<class T>
+double norm2(T const& x)
+{
+    return x.dot(x);
+}
 
 extern "C" double eigen_rbf(double nu, double* __restrict__ u0, int ul, double* __restrict__ v0, int vl)
 {
-    int           n = ul < vl ? ul : vl;
-    Map<VectorXd> u((double*) __builtin_assume_aligned(u0,16),n);
-    Map<VectorXd> v((double*) __builtin_assume_aligned(v0,16),n);
+    int                   n = ul < vl ? ul : vl;
+    Map<VectorXd,Aligned> u(u0,n);
+    Map<VectorXd,Aligned> v(v0,n);
 
     return exp(-nu*(u-v).squaredNorm());
 }
 
-extern "C" double eigen_rbf2(double nu, double* __restrict__ u0, int ul, double* __restrict__ v0, int vl)
+extern "C" double eigen_rbf_abs(double nu, double* __restrict__ u0, int ul, double* __restrict__ v0, int vl)
 {
-    int           n = ul < vl ? ul : vl;
-    Map<VectorXd> u((double*) __builtin_assume_aligned(u0,16),n);
-    Map<VectorXd> v((double*) __builtin_assume_aligned(v0,16),n);
-    VectorXd      temp = u - v;
+    int                   n = ul < vl ? ul : vl;
+    Map<VectorXd,Aligned> u(u0,n);
+    Map<VectorXd,Aligned> v(v0,n);
 
-    return exp(-nu*(temp.dot(temp)));
+    return exp(-nu*((u-v).dot(u-v)));
 }

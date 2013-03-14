@@ -41,6 +41,12 @@ public:
     }
 };
 
+template<class T>
+double norm2(VExpr<T> const& x)
+{
+    return dot(x,x);
+}
+
 extern "C" double salt_rbf(double nu, double* __restrict__ u0, int ul, double* __restrict__ v0, int vl)
 {
     int               n = ul < vl ? ul : vl;
@@ -49,4 +55,13 @@ extern "C" double salt_rbf(double nu, double* __restrict__ u0, int ul, double* _
     VExprSub<MemVector<double>, MemVector<double> > z = u - v;
 
     return exp(-nu*dot(z, z));
+}
+
+extern "C" double salt_rbf_abs(double nu, double* __restrict__ u0, int ul, double* __restrict__ v0, int vl)
+{
+    int               n = ul < vl ? ul : vl;
+    MemVector<double> u(n, u0);
+    MemVector<double> v(n, v0);
+
+    return exp(-nu*norm2(u-v));
 }

@@ -108,11 +108,12 @@ main = do
     printf "Vector library rbf3 (Double):     %0.8f\n" (Rbf.Double.VectorAlt2.rbf 0.001 du2 dv2)
     printf "BLAS rbf (Double):                %0.8f\n" (Rbf.Double.CManual.rbf    0.001 du2 dv2)
     printf "BLAS rbf (intermediate) (Double): %0.8f\n" (Rbf.Double.CManualIntermediate.rbf 0.001 du2 dv2)
-    printf "Blitz rbf:                        %0.8f\n" (Rbf.Double.Blitz.rbf  0.001 du2 dv2)
-    printf "Boost uBLAS rbf:                  %0.8f\n" (Rbf.Double.Boost.rbf  0.001 du2 dv2)
-    printf "Eigen rbf:                        %0.8f\n" (Rbf.Double.Eigen.rbf  0.001 du2 dv2)
-    printf "Eigen rbf2:                       %0.8f\n" (Rbf.Double.Eigen.rbf2 0.001 du2 dv2)
-    printf "SALT rbf:                         %0.8f\n" (Rbf.Double.SALT.rbf   0.001 du2 dv2)
+    printf "Blitz rbf:                        %0.8f\n" (Rbf.Double.Blitz.rbf      0.001 du2 dv2)
+    printf "Boost uBLAS rbf:                  %0.8f\n" (Rbf.Double.Boost.rbf      0.001 du2 dv2)
+    printf "Eigen rbf:                        %0.8f\n" (Rbf.Double.Eigen.rbf      0.001 du2 dv2)
+    printf "Eigen rbf_abs:                    %0.8f\n" (Rbf.Double.Eigen.rbf_abs  0.001 du2 dv2)
+    printf "SALT rbf:                         %0.8f\n" (Rbf.Double.SALT.rbf       0.001 du2 dv2)
+    printf "SALT rbf_abs:                     %0.8f\n" (Rbf.Double.SALT.rbf_abs   0.001 du2 dv2)
   where
     n :: Int
     n = 10000     -- vector length

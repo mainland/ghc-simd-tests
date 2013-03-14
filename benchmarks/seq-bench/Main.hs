@@ -90,7 +90,7 @@ main =
             runOne "rbf" "blitz"        n (uncurry (Rbf.Double.Blitz.rbf nu)) (fu2, fv2)
             runOne "rbf" "boost"        n (uncurry (Rbf.Double.Boost.rbf nu)) (fu2, fv2)
             runOne "rbf" "eigen"        n (uncurry (Rbf.Double.Eigen.rbf nu)) (fu2, fv2)
-            runOne "rbf" "eigen2"       n (uncurry (Rbf.Double.Eigen.rbf2 nu)) (fu2, fv2)
+            runOne "rbf" "eigen_abs"    n (uncurry (Rbf.Double.Eigen.rbf_abs nu)) (fu2, fv2)
             runOne "rbf" "salt"         n (uncurry (Rbf.Double.SALT.rbf nu)) (fu2, fv2)
 
     runOne  ::  String
