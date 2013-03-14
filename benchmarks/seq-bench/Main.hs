@@ -99,7 +99,7 @@ main = do
             ->  a
             ->  IO ()
     runOne func variant n f x = do
-        (mean, max, min, sigma) <- timeBenchmark nTRIALS f x
+        (mean, max, min, sigma) <- timeBenchmark CPUClock nTRIALS (Just 1.0) f x
         printf "%s,%s,%d,%02f,%02f,%02f,%02f\n" func variant n mean min max sigma
 
     range :: Num a => (a, a)

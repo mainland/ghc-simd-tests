@@ -73,7 +73,7 @@ main = do
             ->  a
             ->  IO ()
     runOne func variant n m f x = do
-        (mean, max, min, sigma) <- timeBenchmark nTRIALS f x
+        (mean, max, min, sigma) <- timeBenchmark WallClock nTRIALS Nothing f x
         printf "%s,%s,%d,%d,%02f,%02f,%02f,%02f\n" func variant n m mean min max sigma
 
     range :: Num a => (a, a)

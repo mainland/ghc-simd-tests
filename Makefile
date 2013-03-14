@@ -164,6 +164,8 @@ COMMON_SRC = \
     common/Util/MmMalloc.hs \
     common/Util/Random.hs \
     common/Util/Statistics.hs \
+    common/Util/Time.hs \
+    common/Util/time.c \
     common/Vector.hs
 
 prim : examples/prim/Main.hs
