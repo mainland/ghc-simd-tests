@@ -1,5 +1,5 @@
 {-# LANGUAGE ParallelArrays #-}
-{-# OPTIONS -fvectorise #-}
+{-# OPTIONS -fvectorise -fno-vectorisation-avoidance #-}
 
 module Dotp.Double.Dph (
     dotp

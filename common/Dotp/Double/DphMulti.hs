@@ -1,15 +1,12 @@
 {-# LANGUAGE ParallelArrays #-}
-{-# OPTIONS -fvectorise #-}
+{-# OPTIONS -fvectorise -fno-vectorisation-avoidance #-}
 
 module Dotp.Double.DphMulti (
     dotp
   ) where
 
 import Data.Array.Parallel
-import Data.Array.Parallel.Prelude
-import Data.Array.Parallel.Prelude.MultiDouble as D
-
-import qualified Prelude
+import qualified Data.Array.Parallel.Prelude.MultiDouble as D
 
 dotp :: PArray Double -> PArray Double -> Double
 {-# NOINLINE dotp #-}
