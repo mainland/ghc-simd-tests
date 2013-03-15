@@ -36,17 +36,17 @@ def main():
         else:
             plotSeqTime(opts, 'dotp', data)
     elif opts.rbf:
-        gccData = mlab.csv2rec(filepaths[0],
-                               comments='#',
-                               names=['func','variant','n','tmean','tmax','tmin','tstddev'])
+        data = []
+
+        for path in filepaths:
+           data.append(mlab.csv2rec(path,
+                                    comments='#',
+                                    names=['func','variant','n','tmean','tmax','tmin','tstddev']))
 
         if opts.ratio:
-            plotRbfPerformanceRatio(opts, 'rbf', gccData)
+            plotRbfPerformanceRatio(opts, 'rbf', data[0])
         else:
-            iccData = mlab.csv2rec(filepaths[1],
-                                   comments='#',
-                                   names=['func','variant','n','tmean','tmax','tmin','tstddev'])
-            plotRbfFlops(opts, gccData, iccData)
+            plotRbfFlops(opts, data)
             
     elif opts.pardotp:
         data = mlab.csv2rec(filepaths[0],
@@ -84,20 +84,34 @@ def getOpts():
                       action="store_true", dest="sec")    
     parser.add_option("--nsets",
                       action="store", type="int", dest="nsets")
+    parser.add_option("--dataset",
+                      action="append", type="string", dest="dataset")
     parser.add_option("--fontsize",
                       action="store", type="string", dest="fontsize")
     parser.add_option("--legend-fontsize",
                       action="store", type="string", dest="legendfontsize")
     parser.add_option("--loc",
                       action="store", type="string", dest="loc")
+    parser.add_option("--cachesize-at",
+                      action="store", type="float", dest="cacheSizeAt")
+    parser.add_option("--sort-legend-at",
+                      action="store", type="string", dest="sortLegendAt")
+    parser.add_option("--errorbars",
+                      action="store_true", dest="errorbars")
     parser.add_option("--xmin",
-                      action="store", type="string", dest="xmin")
+                      action="store", type="float", dest="xmin")
+    parser.add_option("--xmax",
+                      action="store", type="float", dest="xmax")
     parser.add_option("--ymax",
                       action="store", type="float", dest="ymax")
     parser.add_option("--ymin",
                       action="store", type="float", dest="ymin")
     parser.add_option("-o", "--output",
                       action="store", type="string", dest="output")
+    parser.add_option("--calibri",
+                      action="store_true", dest="calibri")
+    parser.add_option("--palatino",
+                      action="store_true", dest="palatino")
     (opts, args) = parser.parse_args()
 
     if opts.debug:
@@ -250,21 +264,18 @@ def plotRbfPerformanceRatio(opts, func, data):
                 ('cmanual_int', 'Goto BLAS 1.13 (w/intermediate)')]
     elif opts.alt == 2:
         sets = [('cmanual', 'C (BLAS primitives)'),
-                ('vector2', 'Haskell'),
+                ('vector_alt', 'Haskell'),
                 ('cboost',  'Boost uBLAS')]
     elif opts.alt == 3:
         sets = [('cmanual', 'C (BLAS primitives)'),
-                ('vector2', 'Haskell'),
-                ('eigen',   'Eigen')]
+                ('vector_alt', 'Haskell'),
+                ('ceigen',   'Eigen')]
     elif opts.alt == 4:
         sets = [('cmanual', 'C (BLAS primitives)'),
                 ('vector',  'Haskell'),
-                 ('vector2', 'Haskell 2'),
-                ('vector3', 'Haskell 3'),
                 ('boost',   'Boost'),
                 ('blitz',   'Blitz++'),
                 ('eigen',   'Eigen'),
-                ('eigen2',  'Eigen 2'),
                 ('salt',    'SALT')]
     else:
         sets = [('cmanual', 'Goto BLAS 1.13'),
@@ -306,7 +317,7 @@ def plotRbfPerformanceRatio(opts, func, data):
     
     ax.set_xticks(ind+width)
     ax.set_xticklabels( ["$2^{%d}$" % int(math.log(r.n,2)) for r in baseline] )
-    ax.set_xlim(xmin=0, xmax=13)
+    ax.set_xlim(xmin=0, xmax=24)
 
     off = 0.0
 
@@ -314,6 +325,8 @@ def plotRbfPerformanceRatio(opts, func, data):
         r = selectField(data, func, 'variant', f)
         t = r.tmean
         tstddev = r.tstddev
+
+        print f, label, r
 
         ax.bar(ind+off, t/baseline_t, width/groupSize,
                color=CS.next(),
@@ -449,17 +462,15 @@ def plotParPerformanceRatio(opts, func, data):
     plt.xlabel('Number of Threads')
     plt.ylabel('Execution Time Ratio')
     
-def plotRbfFlops(opts, gccData, iccData):
-    if opts.alt == 1:
-        sets = [('vector',  'Haskell'),
-                ('eigen',   'Eigen (squaredNorm)'),
-                ('salt',    'SALT')]
-    else:
-        sets = [('vector',  'Haskell'),
-                ('cmanual',   'Goto BLAS'),
-                ('boost',   'Boost'),
-                ('blitz',   'Blitz++'),
-                ('eigen2',  'Eigen')]
+def plotRbfFlops(opts, dataSets):
+    sets = [('vector',    'Haskell'),
+            ('boost',     'Boost'),
+            ('blitz',     'Blitz++'),
+            ('eigen_abs', 'Eigen (user abstraction)'),
+            ('eigen',     'Eigen (squaredNorm)')]
+
+    if opts.nsets:
+        sets = sets[0:opts.nsets]
 
     xLines = [("L1", 32*1024),
               ("L2", 256*1024),
@@ -468,13 +479,22 @@ def plotRbfFlops(opts, gccData, iccData):
     yLines = [("Theoretical Peak MFlops", 3.4*1000*4)]
     
     if not opts.loc:
-        opts.loc = 'upper right'
+        opts.loc = 'upper left'
+
+    if not opts.xmin:
+        opts.xmin = 2*9
+
+    if not opts.xmax:
+        opts.xmax = 2**28
 
     if not opts.ymin:
         opts.ymin = 0
 
     if not opts.ymax:
         opts.ymax = 8000
+
+    if not opts.cacheSizeAt:
+        opts.cacheSizeAt = 3400
     
     plt.clf()
     plt.cla()
@@ -482,44 +502,69 @@ def plotRbfFlops(opts, gccData, iccData):
     ax = plt.subplot(111)
 
     CS = itertools.cycle(saneColors[0:len(sets)])
-    MR = itertools.cycle(['+', '.',   'x', '1',  '2'][0:len(sets)])
+    MR = itertools.cycle(['+', '.',   'x', '1',  '2', '3'][0:len(sets)])
+    MS = itertools.cycle([7,   7,   7,  7,   10, 10][0:len(sets)])
     LS = itertools.cycle(['-'] * len(sets) +
-                         ['--'] * len(sets))
-    MS = itertools.cycle([7,   7,   7,  10,   10][0:len(sets)])
+                         ['--'] * len(sets) +
+                         [':'] * len(sets))
 
-    for (data, ext) in [(gccData, "gcc"), (iccData, "icc")]:
+    labeledData = {}
+    
+    for i in range(0, len(dataSets)):
+        data = dataSets[i]
+        name = opts.dataset[i]
+        
         for (f, label) in sets:
             r = selectField(data, 'rbf', "variant", f)
-            print r.tmean[1], r.tstddev[1], r.n[1]
-            
-            flops = 3.0*r.n/r.tmean/float(1000*1000)
-            flops_stddev = 3.0*r.n/r.tstddev/float(1000*1000)
-            flops_stddev = None
-            
-            plt.errorbar(r['n'], flops,
-                         yerr=flops_stddev,
-                         color=CS.next(),
-                         marker=MR.next(),
-                         linestyle=LS.next(),
-                         markersize=MS.next(),
-                         label=label + " " + ext)
 
+            if len(r) > 0 and (name != 'haskell' or label == 'Haskell'):
+                numBytes = 2*r['n']*8
+
+                flops = 3.0*r.n/(r.tmean*1000*1000)
+                flops_stddev = 3.0*r.n/((r.tmean - r.tstddev)*1000*1000) - flops
+
+                if not opts.errorbars:
+                    flops_stddev = None
+
+                # Don't want "Haskell (haskell)"
+                if name != label:
+                    label = label + " (" + name + ")"
+
+                labeledData[label] = (numBytes, flops)
+                    
+                plt.errorbar(numBytes, flops,
+                             yerr=flops_stddev,
+                             color=CS.next(),
+                             marker=MR.next(),
+                             linestyle=LS.next(),
+                             markersize=MS.next(),
+                             label=label)
+            else:
+                CS.next()
+                MR.next()
+                LS.next()
+                MS.next()            
+            
     COLOR=(0.3,0.3,0.3)
-    ALPHA=1.0
-    YMID1=3200
-    YMID2=3400
-    YMID3=3600
-    
-    plt.text(2*1e3, 7500, "Higher is better",
-             fontsize=16,
-             horizontalalignment='center',
-             verticalalignment='center',
-             color='k',
-             alpha=ALPHA)
+    ALPHA=0.5
+
+    if False:
+        plt.text(2*1e2, 4700, "Higher is better",
+                 fontsize=16,
+                 horizontalalignment='center',
+                 verticalalignment='center',
+                 color='k',
+                 alpha=1.0)
+
+    temp = 0.02*(opts.ymax-opts.ymin)
+    YMID1 = opts.cacheSizeAt - temp
+    YMID2 = opts.cacheSizeAt
+    YMID3 = opts.cacheSizeAt + temp
     
     for (lbl, x) in xLines:
         plt.vlines(x, opts.ymin, YMID1, colors=COLOR, alpha=ALPHA)
         plt.text(x, YMID2, lbl,
+                 fontsize=16,
                  rotation='vertical',
                  horizontalalignment='center',
                  verticalalignment='center',
@@ -527,16 +572,36 @@ def plotRbfFlops(opts, gccData, iccData):
                  alpha=ALPHA)
         plt.vlines(x, YMID3, opts.ymax, colors=COLOR, alpha=ALPHA)
 
+    plt.xlabel('Working Set (bytes)')
     plt.ylabel('MFlops')
     
     ax.set_xscale('log', basex=10)
     ax.set_yscale('linear')
     ax.set_autoscale_on(False)
-    ax.set_xlim(xmin=2**9, xmax=2**24)
+    ax.set_xlim(xmin=opts.xmin, xmax=opts.xmax)
     ax.set_ylim(ymin=opts.ymin, ymax=opts.ymax)
     
     plt.legend(loc=opts.loc, numpoints=1)
-    plt.xlabel('Vector size (elements)')
+
+    if opts.sortLegendAt:
+        x = float(eval(opts.sortLegendAt))
+        handles, labels = ax.get_legend_handles_labels()
+
+        def f((_, l)):
+            (numBytes, flops) = labeledData[l]
+            for i in range(0, len(numBytes)):
+                if numBytes[i] == x:
+                    return flops[i]
+
+            return None
+
+        temp = zip(handles, labels)
+        temp.sort(key=f, reverse=True)
+
+        newHandles = [h for (h,_) in temp]
+        newLabels = [l for (_,l) in temp]
+        
+        ax.legend(newHandles, newLabels, loc=opts.loc, numpoints=1)
 
 #
 #
@@ -591,8 +656,16 @@ plotColors = saneColors
 def matplotConfig(opts):
     rc('text', usetex=True)
     rc('text.latex', preview=True)
-    rc('text.latex', preamble='\usepackage{times}')
-    rc('font',**{'family':'serif','serif':['Times']})
+
+    if opts.palatino:
+        rc('text.latex', preamble='\usepackage{mathpazo}')
+        rc('font',**{'family':'serif','serif':['Palatino']})
+    elif opts.calibri:
+        rc('text.latex', preamble='')
+        rc('font',**{'family':'serif','serif':['Calibri']})
+    else:
+        rc('text.latex', preamble='\usepackage{mathptmx}')
+        rc('font',**{'family':'serif','serif':['Times']})
 
     if not opts.fontsize:
         opts.fontsize = 20
@@ -606,6 +679,7 @@ def matplotConfig(opts):
     rc('ytick',  labelsize=opts.fontsize)
 
     rc('lines', antialiased=True)
+    rc('figure', figsize=(12,9))
 
 if __name__ == '__main__':
     main()

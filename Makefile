@@ -19,15 +19,19 @@ GHCFLAGS+=$(EXTRAGHCFLAGS)
 
 GHCFLAGS+=-Werror
 
+GHCFLAGS+=-DEIGEN_VECTORIZE_SSE4_2 -DNDEBUG
+
 GHCFLAGS+=-pgmc $(GCC)
-GHCFLAGS+=-optc-O3 -optc-ftree-vectorize -optc-msse4 -optc-ffast-math -optc-funroll-loops -optc-mtune=corei7
+GHCFLAGS+=-optc-O3 -optc-msse4.2 -optc-ffast-math -optc-ftree-vectorize -optc-funroll-loops
 
 #GHCFLAGS+=-pgmc $(ICC) -pgml $(ICC)
-#GHCFLAGS+=-optc-O3 -optc-fast -optc-xhost
+#GHCFLAGS+=-optc-Qrestrict -optc-Ox -optc-Oi -optc-Ot -optc-Ob2 -optc-msse4.2 -optc-fp-model -optcfast
 
 GHCFLAGS+=-rtsopts -threaded -Odph
-GHCFLAGS+=-O2 -fllvm
-GHCFLAGS+=-optlo-O3 -optlc-mcpu=corei7 -optlc-mattr=sse42
+GHCFLAGS+=-O2 -msse4.2
+GHCFLAGS+=-fllvm -optlo-O3 -optc-O3
+#GHCFLAGS+=-fno-liberate-case -funfolding-use-threshold1000 -funfolding-keeness-factor1000
+
 #GHCFLAGS+=-optc-ggdb -optc-fverbose-asm
 #GHCFLAGS+=-optc-ftree-vectorizer-verbose=5
 #GHCFLAGS+=-fcpr-off -fno-liberate-case
@@ -67,7 +71,7 @@ GHCFLAGS+=-dcore-lint
 #GHCFLAGS+=-ddump-cmm
 #GHCFLAGS+=-ddump-cmm-cfg
 #GHCFLAGS+=-ddump-cmm-proc
-GHCFLAGS+=-ddump-asm
+#GHCFLAGS+=-ddump-asm
 #GHCFLAGS+=-ddump-llvm
 #GHCFLAGS+=-ddump-simpl
 #GHCFLAGS+=-ddump-simpl-iterations
@@ -192,7 +196,7 @@ seq-bench : benchmarks/seq-bench/Main.hs $(COMMON_SRC)
 	    -odir obj/seq-bench/$* -hidir obj/seq-bench/$* -icommon \
 	    -o $@
 
-par-bench : benchmarks/par-bench/Main.hs $(DOTP_SRC) $(INPLACE_PACKAGES)
+par-bench : benchmarks/par-bench/Main.hs $(COMMON_SRC) $(INPLACE_PACKAGES)
 	$(GHC) $(GHCFLAGS) $< $(COMMON_SRC) \
 	    --make \
 	    -odir obj/par-bench/$* -hidir obj/par-bench/$* -icommon \
@@ -233,15 +237,25 @@ FIGS = \
 	figs/dotp-serial-ratio-2.pdf \
 	figs/rbf-serial-ratio.pdf \
 	figs/dotp-parallel.pdf \
-	figs/dotp-parallel-ratio.pdf
+	figs/dotp-parallel-ratio.pdf \
+	figs/rbf-mflops-slow.pdf \
+	figs/rbf-mflops-fast.pdf
 
+.PHONY : clean-figs
+clean-figs :
+	rm -rf $(FIGS)
+
+.PHONY : figs
 figs : $(FIGS)
+
+.PHONY : par-figs
+par-figs : figs/dotp-parallel.pdf figs/dotp-parallel-ratio.pdf
 
 data/seq-bench.dat : seq-bench
 	./seq-bench rbf >$@
 
 data/par-bench.dat : par-bench
-	./par-bench +RTS -N8 >$@
+	./par-bench +RTS -N16 >$@
 
 figs/dotp-serial.pdf : data/seq-bench.dat $(PLOT)
 	$(PLOT) --dotp $< -o $@
@@ -262,7 +276,7 @@ figs/dotp-parallel.pdf : data/par-bench.dat $(PLOT)
 	$(PLOT) --par-dotp $< -o $@
 
 figs/dotp-parallel-ratio.pdf : data/par-bench.dat $(PLOT)
-	$(PLOT) --par-dotp --ratio $< --ymin 0 --ymax 2.0 -o $@
+	$(PLOT) --par-dotp --ratio --ymin 0 --ymax 2.0 $< -o $@
 
 figs/rbf-mflops-slow.png : $(PLOT)
 	$(PLOT) --rbf --legend-fontsize 9 -o $@ \
@@ -271,3 +285,19 @@ figs/rbf-mflops-slow.png : $(PLOT)
 figs/rbf-mflops-fast.png : $(PLOT)
 	$(PLOT) --rbf --legend-fontsize 9 --alt 1 -o $@ \
 		data/2013-02-07/seq-bench-home-gcc.dat data/2013-02-07/seq-bench-home-icc.dat
+
+FIGDATA=data/2013-02-20
+
+figs/rbf-mflops-slow.pdf : $(PLOT)
+	$(PLOT) --rbf --legend-fontsize 12 -o $@ \
+		--ymax 8000 --cachesize-at 1000 --sort-legend-at '256*1024' --nsets 4 \
+		--dataset haskell $(FIGDATA)/home-linux-haskell.dat \
+		--dataset gcc $(FIGDATA)/home-linux-gcc.dat \
+		--dataset icc $(FIGDATA)/home-linux-icc.dat
+
+figs/rbf-mflops-fast.pdf : $(PLOT)
+	$(PLOT) --rbf --legend-fontsize 12 -o $@ \
+		--ymax 12000 --cachesize-at 3000 --sort-legend-at '256*1024' --nsets 5 \
+		--dataset haskell $(FIGDATA)/home-linux-haskell.dat \
+		--dataset gcc $(FIGDATA)/home-linux-gcc.dat \
+		--dataset icc $(FIGDATA)/home-linux-icc.dat
