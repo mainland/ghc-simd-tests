@@ -29,7 +29,7 @@ GHCFLAGS+=-optc-O3 -optc-msse4.2 -optc-ffast-math -optc-ftree-vectorize -optc-fu
 
 GHCFLAGS+=-rtsopts -threaded -Odph
 GHCFLAGS+=-O2 -msse4.2
-GHCFLAGS+=-fllvm -optlo-O3 -optc-O3
+GHCFLAGS+=-fllvm -optlo-O3
 #GHCFLAGS+=-fno-liberate-case -funfolding-use-threshold1000 -funfolding-keeness-factor1000
 
 #GHCFLAGS+=-optc-ggdb -optc-fverbose-asm
@@ -58,6 +58,13 @@ GHCFLAGS+=-lstdc++
 #GHCFLAGS+=-pgmlo=$(LLVMOPT) -pgmlc=$(LLVMLLC)
 #GHCFLAGS+=-optlc=--enable-tbaa=true
 #GHCFLAGS+=-optlo=-loop-unroll -optlo=-indvars -optlo=-loop-simplify 
+#GHCFLAGS+=-optlo=-vectorize
+#GHCFLAGS+=-optlo=-vectorize-loops
+#GHCFLAGS+=-optlo=-enable-unsafe-fp-math
+#GHCFLAGS+=-optlo=-fp-contract=fast
+#GHCFLAGS+=-optlo=-loop-unroll
+#GHCFLAGS+=-optlo=-debug
+#GHCFLAGS+=-optlo=-print-after-all -optlo=-print-before-all
 
 GHCFLAGS+=-dcore-lint
 
