@@ -100,7 +100,7 @@ GHCFLAGS+=-dsuppress-all -dppr-case-as-let -dppr-cols200
 
 MULTIVECTORFLAGS+=-package multivector -package-db multivector/dist/package.conf.inplace
 
-EXAMPLES = prim roman sanity seq-bench par-bench
+EXAMPLES = prim roman sanity seq-bench par-bench sse-bench
 EXAMPLEINCS = $(foreach EXAMPLE,$(EXAMPLES),-iexamples/$(EXAMPLE))
 
 .PHONY : all
@@ -111,7 +111,7 @@ clean :
 	rm -rf obj
 	rm -rf $(EXAMPLES)
 	rm -rf $(FIGS)
-	rm -f data/seq-bench.dat data/par-bench.dat
+	rm -f data/seq-bench.dat data/par-bench.dat data/sse-bench.dat
 	rm -rf multivector/dist
 	find common examples tests benchmarks -name '*.s' | xargs rm -f
 	find common examples tests benchmarks -name '*.ll' | xargs rm -f
@@ -179,6 +179,16 @@ COMMON_SRC = \
     common/Util/time.c \
     common/Vector.hs
 
+UTIL_SRC = \
+    common/Util/Benchmark.hs \
+    common/Util/MmMalloc.c \
+    common/Util/MmMalloc.hs \
+    common/Util/Random.hs \
+    common/Util/Statistics.hs \
+    common/Util/Time.hs \
+    common/Util/time.c \
+    common/Vector.hs
+
 prim : examples/prim/Main.hs
 	$(GHC) $(GHCFLAGS) $< \
 	    --make \
@@ -207,6 +217,16 @@ par-bench : benchmarks/par-bench/Main.hs $(COMMON_SRC) $(INPLACE_PACKAGES)
 	$(GHC) $(GHCFLAGS) $< $(COMMON_SRC) \
 	    --make \
 	    -odir obj/par-bench/$* -hidir obj/par-bench/$* -icommon \
+	    -o $@
+
+SSE_BENCH_SRC = \
+	benchmarks/sse-bench/Quickhull/Solver/Scalar.hs \
+	benchmarks/sse-bench/Quickhull/Solver/SSE.hs
+
+sse-bench : benchmarks/sse-bench/Main.hs $(SSE_BENCH_SRC) $(UTIL_SRC)
+	$(GHC) $(GHCFLAGS) $< $(UTIL_SRC) \
+	    --make \
+	    -odir obj/sse-bench/$* -hidir obj/sse-bench/$* -icommon -ibenchmarks/sse-bench \
 	    -o $@
 
 %.core : %.hs
@@ -240,6 +260,9 @@ data/seq-bench.dat : seq-bench
 
 data/par-bench.dat : par-bench
 	./par-bench +RTS -N16 >$@
+
+data/sse-bench.dat : sse-bench
+	./sse-bench rbf dotp >$@
 
 #
 # Figures
