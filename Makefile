@@ -232,79 +232,115 @@ obj/seq-bench/Rbf/Double/Vector.o : common/Rbf/Double/Vector.ll
 	 $(GHC) $(GHCFLAGS) -v -c $< -o $@
 
 #
+# Benchmark data
+#
+
+data/seq-bench.dat : seq-bench
+	./seq-bench rbf dotp >$@
+
+data/par-bench.dat : par-bench
+	./par-bench +RTS -N16 >$@
+
+#
 # Figures
 #
 
 PLOT      = ./bin/plot.py
 
 FIGS = \
-	figs/dotp-serial.pdf \
+	figs/dotp-serial-time.pdf \
 	figs/dotp-serial-ratio.pdf \
-	figs/dotp-serial-ratio-1.pdf \
-	figs/dotp-serial-ratio-2.pdf \
-	figs/rbf-serial-ratio.pdf \
-	figs/dotp-parallel.pdf \
+	figs/dotp-serial-mflops.pdf \
 	figs/dotp-parallel-ratio.pdf \
-	figs/rbf-mflops-slow.pdf \
-	figs/rbf-mflops-fast.pdf
-
-.PHONY : clean-figs
-clean-figs :
-	rm -rf $(FIGS)
+	figs/rbf-serial-ratio.pdf \
+	figs/rbf-mflops.pdf
 
 .PHONY : figs
 figs : $(FIGS)
 
-.PHONY : par-figs
-par-figs : figs/dotp-parallel.pdf figs/dotp-parallel-ratio.pdf
+.PHONY : figs-clean
+figs-clean :
+	rm -rf $(FIGS)
 
-data/seq-bench.dat : seq-bench
-	./seq-bench rbf >$@
+HASKELL_SEQDATA = data/2013-03-16/home-seq-bench.dat
+C_SEQDATA       = data/2013-03-16/home-linux-gcc-rbf.dat
+PARDATA         = data/2012-11-02/par-bench-cam05.dat
 
-data/par-bench.dat : par-bench
-	./par-bench +RTS -N16 >$@
+figs/dotp-serial-time.pdf : $(HASKELL_SEQDATA) $(PLOT)
+	$(PLOT) --func dotp --time \
+		--dataset haskell $< \
+		--variant scalar --variant vector --variant cscalar --variant cmanual --variant cblas \
+		--xmin=0 --xmax='2**24*1.5' --ymin='10**(-3)' --ymax=60 \
+		-o $@
 
-figs/dotp-serial.pdf : data/seq-bench.dat $(PLOT)
-	$(PLOT) --dotp $< -o $@
+figs/dotp-serial-ratio.pdf : $(HASKELL_SEQDATA) $(PLOT)
+	$(PLOT) --func dotp --ratio cscalar \
+	        --variant cscalar --variant cmanual --variant vector --variant cblas \
+		--errorbars \
+		--ymin 0.4 --ymax 1.3 \
+		--dataset haskell $< \
+		-o $@
 
-figs/dotp-serial-ratio.pdf : data/seq-bench.dat $(PLOT)
-	$(PLOT) --dotp --ratio --ymax 3 $< -o $@
+figs/dotp-serial-mflops.pdf : $(HASKELL_SEQDATA) $(PLOT)
+	$(PLOT) --func dotp --mflops \
+		--dataset haskell $< \
+		--variant scalar --variant vector --variant cscalar --variant cmanual --variant cblas \
+		--cache-label-at 3000 --l1 '32*1024' --l2 '256*1024' --l3 '8192*1024' \
+		--flops-factor 2 --bytes-factor 16 \
+		--ymax 10000 \
+		--legend-loc 'upper right' \
+		-o $@
 
-figs/dotp-serial-ratio-1.pdf : data/seq-bench.dat $(PLOT)
-	$(PLOT) --dotp --ratio --nsets 1 $< -o $@
+figs/dotp-parallel-ratio.pdf : $(PARDATA) $(PLOT)
+	$(PLOT) --func dotp --ratio cmanual \
+		--data haskell $< \
+		--variant cmanual --variant vector --variant dph --variant dphmulti \
+		--xdata threads \
+		-o $@
 
-figs/dotp-serial-ratio-2.pdf : data/seq-bench.dat $(PLOT)
-	$(PLOT) --dotp --ratio --nsets 2 $< -o $@
+figs/rbf-serial-ratio.pdf : $(HASKELL_SEQDATA) $(PLOT)
+	$(PLOT) --func rbf --ratio cmanual \
+		--variant cmanual --variant vector \
+		--errorbars \
+		--dataset haskell $< \
+		-o $@
 
-figs/rbf-serial-ratio.pdf : data/seq-bench.dat $(PLOT)
-	$(PLOT) --rbf --ratio --alt 4 --legend-fontsize 9 --ymax 2 $< -o $@
+figs/rbf-mflops.pdf : $(HASKELL_SEQDATA) $(C_SEQDATA) $(PLOT)
+	$(PLOT) --func rbf --mflops \
+		--variant vector --variant boost --variant blitz --variant eigen_abs_bad --variant eigen_abs_good \
+		--data haskell $(HASKELL_SEQDATA) \
+		--data gcc $(C_SEQDATA) \
+		--ymax 12000 \
+		--sort-legend-at '256*1024' \
+		--cache-label-at 3000 --l1 '32*1024' --l2 '256*1024' --l3 '8192*1024' \
+		--flops-factor 3 --bytes-factor 16 \
+		-o $@
 
-figs/dotp-parallel.pdf : data/par-bench.dat $(PLOT)
-	$(PLOT) --par-dotp $< -o $@
+FIGDATA?=data/2013-03-18
 
-figs/dotp-parallel-ratio.pdf : data/par-bench.dat $(PLOT)
-	$(PLOT) --par-dotp --ratio --ymin 0 --ymax 2.0 $< -o $@
+.PHONY : dotp-ratio-plot
+dotp-ratio-plot : $(FIGDATA)/seq-bench.dat
+	$(PLOT) --func dotp --ratio cmanual \
+		--variant cmanual --variant vector --variant cblas \
+		--errorbars \
+		--dataset haskell $(FIGDATA)/seq-bench.dat
 
-figs/rbf-mflops-slow.png : $(PLOT)
-	$(PLOT) --rbf --legend-fontsize 9 -o $@ \
-		data/2013-02-07/seq-bench-home-gcc.dat data/2013-02-07/seq-bench-home-icc.dat
+.PHONY : rbf-mflops-plot
+rbf-mflops-plot : $(FIGDATA)/seq-bench.dat $(FIGDATA)/linux-gcc-rbf.dat
+	$(PLOT) --func rbf \
+		--variant vector --variant boost --variant blitz --variant eigen --variant eigen_abs_bad --variant eigen_abs_good \
+		--data haskell $(FIGDATA)/seq-bench.dat \
+		--data gcc $(FIGDATA)/linux-gcc-rbf.dat \
+		--mflops \
+		--ymax 12000 \
+		--sort-legend-at '256*1024' \
+		--cache-label-at 3000 --l1 '32*1024' --l2 '256*1024' --l3 '8192*1024' \
+		--flops-factor 3 --bytes-factor 16
 
-figs/rbf-mflops-fast.png : $(PLOT)
-	$(PLOT) --rbf --legend-fontsize 9 --alt 1 -o $@ \
-		data/2013-02-07/seq-bench-home-gcc.dat data/2013-02-07/seq-bench-home-icc.dat
 
-FIGDATA=data/2013-02-20
-
-figs/rbf-mflops-slow.pdf : $(PLOT)
-	$(PLOT) --rbf --legend-fontsize 12 -o $@ \
-		--ymax 8000 --cachesize-at 1000 --sort-legend-at '256*1024' --nsets 4 \
-		--dataset haskell $(FIGDATA)/home-linux-haskell.dat \
-		--dataset gcc $(FIGDATA)/home-linux-gcc.dat \
-		--dataset icc $(FIGDATA)/home-linux-icc.dat
-
-figs/rbf-mflops-fast.pdf : $(PLOT)
-	$(PLOT) --rbf --legend-fontsize 12 -o $@ \
-		--ymax 12000 --cachesize-at 3000 --sort-legend-at '256*1024' --nsets 5 \
-		--dataset haskell $(FIGDATA)/home-linux-haskell.dat \
-		--dataset gcc $(FIGDATA)/home-linux-gcc.dat \
-		--dataset icc $(FIGDATA)/home-linux-icc.dat
+.PHONY : dotp-parallel-ratio-plot
+dotp-parallel-ratio-plot : data/par-bench.dat # data/2012-11-02/par-bench-cam05.dat
+	$(PLOT) --func dotp --ratio cmanual \
+		--data haskell $< \
+		--variant cmanual --variant vector --variant dph --variant dphmulti \
+		--xdata threads
