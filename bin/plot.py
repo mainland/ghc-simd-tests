@@ -1,65 +1,74 @@
 #!/usr/bin/env python
+import itertools
 import logging
 import math
+import sys
 
+import matplotlib
+
+if sys.platform == 'darwin':
+    matplotlib.use('Cairo')
+else:
+    matplotlib.use('GTKCairo')
+
+from matplotlib import rc
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-from matplotlib import rc
 
-import itertools
 import numpy as np
 
 from optparse import OptionParser
-    
+
+LABELS = {('dotp', 'scalar'):   'Haskell',
+          ('dotp', 'vector'):   'Haksell (SSE)',
+          ('dotp', 'cscalar'):  'Hand-written C',
+          ('dotp', 'cmanual'):  'Hand-written C (SSE)',
+          ('dotp', 'cblas'):    'Goto BLAS 1.13',
+          ('dotp', 'dph'):      'DPH',
+          ('dotp', 'dphmulti'): 'DPH (SSE)',
+
+          ('rbf', 'scalar'):         'Vector library',
+          ('rbf', 'vector'):         'Haskell',
+          ('rbf', 'cmanual'):        'C (BLAS)',
+          ('rbf', 'cmanual_int'):    'C (BLAS w/intermediate)',
+          ('rbf', 'blitz'):          'Blitz++',
+          ('rbf', 'boost'):          'Boost uBlas',
+          ('rbf', 'eigen'):          'Eigen',
+          ('rbf', 'eigen_abs'):      'Eigen (user abstraction)',
+          ('rbf', 'eigen_abs_good'): 'Eigen (good norm2)',
+          ('rbf', 'eigen_abs_bad'):  'Eigen (bad norm2)'}
+
 def main():
     (opts, filepaths) = getOpts()
 
     matplotConfig(opts)
-    
-    if opts.sum:
-        data = mlab.csv2rec(filepaths[0],
-                            comments='#',
-                            names=['func','variant','n','tmean','tmax','tmin','tstddev'])
-        
-        if opts.ratio:
-            plotSeqPerformanceRatio(opts, 'sum', data)
-        else:
-            plotSeqTime(opts, 'sum', data)
-    elif opts.dotp:
-        data = mlab.csv2rec(filepaths[0],
-                            comments='#',
-                            names=['func','variant','n','tmean','tmax','tmin','tstddev'])
 
-        if opts.ratio:
-            plotSeqPerformanceRatio(opts, 'dotp', data)
-        else:
-            plotSeqTime(opts, 'dotp', data)
-    elif opts.rbf:
-        data = []
+    data = {}
 
-        for path in filepaths:
-           data.append(mlab.csv2rec(path,
-                                    comments='#',
-                                    names=['func','variant','n','tmean','tmax','tmin','tstddev']))
+    for i in range(0, len(opts.dataset)):
+        label = opts.dataset[i]
+        filepath = filepaths[i]
 
-        if opts.ratio:
-            plotRbfPerformanceRatio(opts, 'rbf', data[0])
+        if opts.xdata == 'threads':
+            data[label] = mlab.csv2rec(filepaths[i],
+                                       comments='#',
+                                       names=['func','variant','n','m','tmean','tmax','tmin','tstddev'])
         else:
-            plotRbfFlops(opts, data)
-            
-    elif opts.pardotp:
-        data = mlab.csv2rec(filepaths[0],
-                            comments='#',
-                            names=['func','variant','n','m','tmean','tmax','tmin','tstddev'])
+            data[label] = mlab.csv2rec(filepaths[i],
+                                       comments='#',
+                                       names=['func','variant','n','tmean','tmax','tmin','tstddev'])
 
-        if opts.ratio:
-            plotParPerformanceRatio(opts, 'dotp', data)
-        else:
-            plotParTime(opts, 'dotp', data)
+    if opts.time:
+        plotTime(opts, data)
+
+    if opts.ratio:
+        plotRatio(opts, data)
+
+    if opts.mflops:
+        plotMFlops(opts, data)
             
     if opts.output:
-        plt.savefig(opts.output, dpi=144)
+        plt.savefig(opts.output, transparent=True)
     else:
         plt.show()
 
@@ -68,50 +77,80 @@ def getOpts():
     parser = OptionParser(usage=usage)
     parser.add_option("-d", "--debug",
                       action="store_true", dest="debug")
-    parser.add_option("--sum",
-                      action="store_true", dest="sum")
-    parser.add_option("--rbf",
-                      action="store_true", dest="rbf")
-    parser.add_option("--dotp",
-                      action="store_true", dest="dotp")
-    parser.add_option("--par-dotp",
-                      action="store_true", dest="pardotp")
-    parser.add_option("--ratio",
-                      action="store_true", dest="ratio")
-    parser.add_option("--alt",
-                      action="store", type="int", dest="alt")
-    parser.add_option("--sec",
-                      action="store_true", dest="sec")    
-    parser.add_option("--nsets",
-                      action="store", type="int", dest="nsets")
+    parser.add_option("-o", "--output",
+                      action="store", type="string", dest="output")
+                      
     parser.add_option("--dataset",
                       action="append", type="string", dest="dataset")
+                      
+    parser.add_option("--func",
+                      action="store", type="string", dest="func")
+    parser.add_option("--variant",
+                      action="append", type="string", dest="variant")
+                      
+    parser.add_option("--sum",
+                      action="store_true", dest="sum")
+    parser.add_option("--dotp",
+                      action="store_true", dest="dotp")
+    parser.add_option("--rbf",
+                      action="store_true", dest="rbf")
+
+    parser.add_option("--xdata",
+                      action="store", type="string", dest="xdata")
+    parser.add_option("--bytes-factor",
+                      action="store", type="float", dest="bytesfactor")
+    parser.add_option("--flops-factor",
+                      action="store", type="float", dest="flopsfactor")
+                                            
+    parser.add_option("--time",
+                      action="store_true", dest="time")
+    parser.add_option("--mflops",
+                      action="store_true", dest="mflops")
+    parser.add_option("--ratio",
+                      action="store", type="string", dest="ratio")
+    
+    parser.add_option("--sec",
+                      action="store_true", dest="sec")
+
     parser.add_option("--fontsize",
                       action="store", type="string", dest="fontsize")
     parser.add_option("--legend-fontsize",
                       action="store", type="string", dest="legendfontsize")
-    parser.add_option("--loc",
-                      action="store", type="string", dest="loc")
-    parser.add_option("--cachesize-at",
-                      action="store", type="float", dest="cacheSizeAt")
+    
+    parser.add_option("--legend-loc",
+                      action="store", type="string", dest="legendLoc")
     parser.add_option("--sort-legend-at",
                       action="store", type="string", dest="sortLegendAt")
     parser.add_option("--errorbars",
                       action="store_true", dest="errorbars")
+    
+    parser.add_option("--l1",
+                      action="store", type="string", dest="l1")
+    parser.add_option("--l2",
+                      action="store", type="string", dest="l2")
+    parser.add_option("--l3",
+                      action="store", type="string", dest="l3")
+    parser.add_option("--cache-label-at",
+                      action="store", type="float", dest="cacheLabelAt")
+                      
     parser.add_option("--xmin",
-                      action="store", type="float", dest="xmin")
+                      action="store", type="string", dest="xmin")
     parser.add_option("--xmax",
-                      action="store", type="float", dest="xmax")
+                      action="store", type="string", dest="xmax")
     parser.add_option("--ymax",
-                      action="store", type="float", dest="ymax")
+                      action="store", type="string", dest="ymax")
     parser.add_option("--ymin",
-                      action="store", type="float", dest="ymin")
-    parser.add_option("-o", "--output",
-                      action="store", type="string", dest="output")
-    parser.add_option("--calibri",
-                      action="store_true", dest="calibri")
+                      action="store", type="string", dest="ymin")
+                      
+    parser.add_option("--text-color",
+                      action="store", type="string", dest="textColor")
+    
+    parser.add_option("--gill",
+                      action="store_true", dest="gill")
     parser.add_option("--palatino",
                       action="store_true", dest="palatino")
+    parser.add_option("--segoe",
+                      action="store_true", dest="segoe")
     (opts, args) = parser.parse_args()
 
     if opts.debug:
@@ -125,13 +164,43 @@ def getOpts():
     if len(args) == 0:
         parser.error("Must specify data file")
 
+    if not opts.dataset or len(opts.dataset) != len(args):
+        parser.error("Each data set must be given a data set label")
+        
+    if opts.sortLegendAt:
+        opts.sortLegendAt = float(eval(opts.sortLegendAt))
+        
+    if opts.l1:
+        opts.l1 = float(eval(opts.l1))
+        
+    if opts.l2:
+        opts.l2 = float(eval(opts.l2))
+        
+    if opts.l3:
+        opts.l3 = float(eval(opts.l3))
+        
+    if opts.xmin:
+        opts.xmin = float(eval(opts.xmin))
+        
+    if opts.xmax:
+        opts.xmax = float(eval(opts.xmax))
+        
+    if opts.ymin:
+        opts.ymin = float(eval(opts.ymin))
+        
+    if opts.ymax:
+        opts.ymax = float(eval(opts.ymax))
+
     return (opts, args)
 
 def selectField(r, func, lbl, v):
     mask = (r["func"] == func) & (r[lbl] == v)
     return r[mask]
     
-def plotTime(opts, func, data, sets, x):
+def plotTime(opts, data):
+    if not opts.legendLoc:
+        opts.legendLoc = 'upper left'
+        
     plt.clf()
     plt.cla()
     
@@ -142,344 +211,127 @@ def plotTime(opts, func, data, sets, x):
     LS = itertools.cycle(['-', '--', '-', '--', ':'])
     MS = itertools.cycle([10,   7,   10,  10,   10])
 
-    for (f, label) in sets:
-        r = selectField(data, func, "variant", f)
+    for v in opts.variant:
+        r = selectField(data['haskell'], opts.func, "variant", v)
         if opts.sec:
             t = r.tmean
         else:
             t = r.tmean*1000.0
 
-        plt.errorbar(r[x], t,
+        plt.errorbar(r['n'], t,
                      color=CS.next(),
                      marker=MR.next(),
                      linestyle=LS.next(),
                      markersize=MS.next(),
-                     label=label)
+                     label=LABELS[(opts.func, v)])
 
     if opts.sec:
         plt.ylabel('Time (sec)')
     else:
         plt.ylabel('Time (ms)')
-
-    return ax
-    
-def plotSeqTime(opts, func, data):
-    sets = [('scalar',  'Vector library (scalar)'),
-            ('vector',  'Vector library (SSE)'),
-            ('cscalar', 'Hand-written C (scalar)'),
-            ('cmanual', 'Hand-written C (SSE)'),
-            ('cblas',   'Goto BLAS 1.13')]
-
-    ax = plotTime(opts, func, data, sets, "n")
     
     ax.set_xscale('log', basex=2)
     ax.set_yscale('log', basex=2)
-    ax.set_autoscale_on(False)
-    ax.set_xlim(xmin=2**12*1.5, xmax=2**24*1.5)
-    ax.set_ylim(ymin=10**(-3), ymax=60)
-    
-    plt.legend(loc='upper left', numpoints=1)
-    plt.xlabel('Vector size (elements)')
 
-def plotParTime(opts, func, data):
-    sets = [('cmanual',  'C (SIMD)'),
-            ('vector',   'Vector library (SIMD)'),
-            ('dph',      'DPH'),
-            ('dphmulti', 'DPH (SIMD)')]
+    if not opts.xmin and not opts.xmax and not opts.ymin and not opts.ymax:
+        ax.set_autoscale_on(True)
+    else:
+        ax.set_autoscale_on(False)
+        ax.set_xlim(xmin=opts.xmin, xmax=opts.xmax)
+        ax.set_ylim(ymin=opts.ymin, ymax=opts.ymax)
     
-    ax = plotTime(opts, func, data, sets, "m")
-    
-    ax.set_yscale('log', basex=2)
-    ax.set_autoscale_on(False)
-    ax.set_xlim(xmin=0, xmax=max(data.m) + 1)
-    ax.set_ylim(ymin=10, ymax=1500)
-    
-    plt.legend(loc='upper right', numpoints=1)
-    #legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    plt.xlabel('Threads')
+    plt.legend(loc=opts.legendLoc, numpoints=1)
 
-def plotSeqPerformanceRatio(opts, func, data):
+    if opts.xdata == 'threads':
+        plt.xlabel('Number of Threads')
+    else:
+        plt.xlabel('Vector size (elements)')
+
+    return ax
+
+def plotRatio(opts, data):
     CS = itertools.cycle(plotColors)
     HS = itertools.cycle(['//', 'xx', '..'])
-    
-    sets = [('cmanual', 'Hand-written C (SSE)'),
-            ('vector',  'Vector library (SSE)'),
-            ('cblas',   'Goto BLAS 1.13')]
 
-    BASELINE = 'cmanual'
+    BASELINE = opts.ratio
     
-    baseline = selectField(data, func, 'variant', BASELINE)
+    baseline = selectField(data['haskell'], opts.func, 'variant', BASELINE)
+    if opts.xdata == 'threads':
+        baseline = baseline[::-1]
     baseline_t = baseline.tmean
     
     plt.clf()
     plt.cla()
 
     numGroups = len(baseline)
-    groupSize = len(sets)
-
-    if opts.nsets:
-        sets = sets[0:opts.nsets]
+    groupSize = len(opts.variant)
     
     # the x locations for the groups
     ind = np.arange(numGroups)
     # the width of the bars
-    width = 0.5
+    width = 0.7
     
     ax = plt.subplot(111)
 
     ax.set_ylabel('Vector size (elements)')
-    ax.set_ylim(ymin=0.5, ymax=1.2)
+
+    if not opts.xmin and not opts.xmax and not opts.ymin and not opts.ymax:
+        ax.set_autoscale_on(True)
+    else:
+        ax.set_autoscale_on(True)
+
+        if not opts.ymin:
+            opts.ymin = 0.0
+
+        if not opts.ymax:
+            opts.ymax = 0.0
+            
+        ax.set_ylim(ymin=opts.ymin, ymax=opts.ymax)
     
-    ax.set_xticks(ind+width)
-    ax.set_xticklabels( ["$2^{%d}$" % int(math.log(r.n,2)) for r in baseline] )
-    ax.set_xlim(xmin=0, xmax=12.5)
+    ax.set_xticks(ind+width/2)
+
+    if opts.xdata == 'threads':
+        ax.set_xticklabels( [r.m for r in baseline] )
+    else:
+        ax.set_xticklabels( ["$2^{%d}$" % int(math.log(r.n,2)) for r in baseline] )
+        
+    for line in ax.get_xticklines():
+        line.set_marker(None)
 
     off = 0.0
 
-    for (f, label) in sets:
-        r = selectField(data, func, 'variant', f)
+    for v in opts.variant:
+        r = selectField(data['haskell'], opts.func, "variant", v)
+        if opts.xdata == 'threads':
+            r = r[::-1]
         t = r.tmean
         tstddev = r.tstddev
+
+        if opts.errorbars:
+            yerr = tstddev/baseline_t
+        else:
+            yerr = None    
 
         ax.bar(ind+off, t/baseline_t, width/groupSize,
                color=CS.next(),
                #hatch=HS.next(),
                ecolor='k',
-               yerr=tstddev/baseline_t,
-               label=label)
+               yerr=yerr,
+               label=LABELS[(opts.func, v)])
         off += width/groupSize
 
     plt.legend(loc='upper right', numpoints=1)
-    plt.xlabel('Vector size (elements)')
+
+    if opts.xdata == 'threads':
+        plt.xlabel('Number of Threads')
+    else:
+        plt.xlabel('Vector size (elements)')
+        
     plt.ylabel('Execution Time Ratio')
-
-def plotRbfPerformanceRatio(opts, func, data):
-    CS = itertools.cycle(plotColors)
-    HS = itertools.cycle(['//', 'xx', '..'])
-
-    if opts.alt == 1:
-        sets = [('cmanual',     'Goto BLAS 1.13'),
-                ('vector',      'Vector library (SSE)'),
-                ('scalar',      'Vector library'),
-                ('cmanual_int', 'Goto BLAS 1.13 (w/intermediate)')]
-    elif opts.alt == 2:
-        sets = [('cmanual', 'C (BLAS primitives)'),
-                ('vector_alt', 'Haskell'),
-                ('cboost',  'Boost uBLAS')]
-    elif opts.alt == 3:
-        sets = [('cmanual', 'C (BLAS primitives)'),
-                ('vector_alt', 'Haskell'),
-                ('ceigen',   'Eigen')]
-    elif opts.alt == 4:
-        sets = [('cmanual', 'C (BLAS primitives)'),
-                ('vector',  'Haskell'),
-                ('boost',   'Boost'),
-                ('blitz',   'Blitz++'),
-                ('eigen',   'Eigen'),
-                ('salt',    'SALT')]
-    else:
-        sets = [('cmanual', 'Goto BLAS 1.13'),
-                ('vector',  'Vector library (SSE)'),
-                ('scalar',  'Vector library')]
-
-    if not opts.loc:
-        opts.loc = 'upper right'
-
-    if not opts.ymin:
-        opts.ymin = 0.4
-
-    if not opts.ymax:
-        opts.ymax = 1.7
-
-    BASELINE = 'cmanual'
-    
-    baseline = selectField(data, func, 'variant', BASELINE)
-    baseline_t = baseline.tmean
-    
-    plt.clf()
-    plt.cla()
-
-    numGroups = len(baseline)
-    groupSize = len(sets)
-
-    if opts.nsets:
-        sets = sets[0:opts.nsets]
-    
-    # the x locations for the groups
-    ind = np.arange(numGroups)
-    # the width of the bars
-    width = 0.7
-    
-    ax = plt.subplot(111)
-
-    ax.set_ylabel('Vector size (elements)')
-    ax.set_ylim(ymin=opts.ymin, ymax=opts.ymax)
-    
-    ax.set_xticks(ind+width)
-    ax.set_xticklabels( ["$2^{%d}$" % int(math.log(r.n,2)) for r in baseline] )
-    ax.set_xlim(xmin=0, xmax=24)
-
-    off = 0.0
-
-    for (f, label) in sets:
-        r = selectField(data, func, 'variant', f)
-        t = r.tmean
-        tstddev = r.tstddev
-
-        print f, label, r
-
-        ax.bar(ind+off, t/baseline_t, width/groupSize,
-               color=CS.next(),
-               #hatch=HS.next(),
-               ecolor='k',
-               yerr=tstddev/baseline_t,
-               label=label)
-        off += width/groupSize
-
-    plt.legend(loc=opts.loc, numpoints=1)
-    plt.xlabel('Vector size (elements)')
-    plt.ylabel('Execution Time Ratio')
-
-def plotParPerformanceRatio(opts, func, data):
-    CS = itertools.cycle(plotColors)
-
-    sets = [('cmanual',  'Hand-written C (SSE)'),
-            ('vector',   'Vector library (SSE)'),
-            ('dph',      'DPH'),
-            ('dphmulti', 'DPH (SSE)')]
-
-    BASELINE = 'cmanual'
-    
-    baseline = selectField(data, func, 'variant', BASELINE)
-    baseline = baseline[::-1]
-    baseline_t = baseline.tmean
-    
-    plt.clf()
-    plt.cla()
-
-    numGroups = len(baseline)
-    groupSize = len(sets)
-    
-    # the x locations for the groups
-    ind = np.arange(numGroups)
-    # the width of the bars
-    width = 0.7
-    
-    ax = plt.subplot(111)
-
-    ax.set_ylabel('Vector size (elements)')
-    if opts.ymin:
-        ymin = float(opts.ymin)
-    else:
-        ymin = 0.5
-    if opts.ymax:
-        ymax = float(opts.ymax)
-    else:
-        ymax = 1.12   
-    ax.set_ylim(ymin=ymin, ymax=ymax)
-    
-    ax.set_xticks(ind+width)
-    ax.set_xticklabels( [r.m for r in baseline] )
-
-    off = 0.0
-
-    for (f, label) in sets:
-        r = selectField(data, func, 'variant', f)
-        r = r[::-1]
-        t = r.tmean
-        tstddev = r.tstddev
-
-        c = CS.next()
-        ax.bar(ind+off, t/baseline_t, width/groupSize,
-               color=c,
-               ecolor='k',
-               yerr=tstddev/baseline_t,
-               label=label)
-        off += width/groupSize
-
-    plt.legend(loc='upper right', numpoints=1)
-    plt.xlabel('Number of Threads')
-    plt.ylabel('Execution Time Ratio')
-
-def plotParPerformanceRatio(opts, func, data):
-    CS = itertools.cycle(plotColors)
-
-    sets = [('cmanual',  'Hand-written C (SSE)'),
-            ('vector',   'Vector library (SSE)'),
-            ('dph',      'DPH'),
-            ('dphmulti', 'DPH (SSE)')]
-
-    BASELINE = 'cmanual'
-    
-    baseline = selectField(data, func, 'variant', BASELINE)
-    baseline = baseline[::-1]
-    baseline_t = baseline.tmean
-    
-    plt.clf()
-    plt.cla()
-
-    numGroups = len(baseline)
-    groupSize = len(sets)
-    
-    # the x locations for the groups
-    ind = np.arange(numGroups)
-    # the width of the bars
-    width = 0.7
-    
-    ax = plt.subplot(111)
-
-    ax.set_ylabel('Vector size (elements)')
-    if opts.ymin:
-        ymin = float(opts.ymin)
-    else:
-        ymin = 0.5
-    if opts.ymax:
-        ymax = float(opts.ymax)
-    else:
-        ymax = 1.12   
-    ax.set_ylim(ymin=ymin, ymax=ymax)
-    
-    ax.set_xticks(ind+width)
-    ax.set_xticklabels( [r.m for r in baseline] )
-
-    off = 0.0
-
-    for (f, label) in sets:
-        r = selectField(data, func, 'variant', f)
-        r = r[::-1]
-        t = r.tmean
-        tstddev = r.tstddev
-
-        c = CS.next()
-        ax.bar(ind+off, t/baseline_t, width/groupSize,
-               color=c,
-               ecolor='k',
-               yerr=tstddev/baseline_t,
-               label=label)
-        off += width/groupSize
-
-    plt.legend(loc='upper right', numpoints=1)
-    plt.xlabel('Number of Threads')
-    plt.ylabel('Execution Time Ratio')
-    
-def plotRbfFlops(opts, dataSets):
-    sets = [('vector',    'Haskell'),
-            ('boost',     'Boost'),
-            ('blitz',     'Blitz++'),
-            ('eigen_abs', 'Eigen (user abstraction)'),
-            ('eigen',     'Eigen (squaredNorm)')]
-
-    if opts.nsets:
-        sets = sets[0:opts.nsets]
-
-    xLines = [("L1", 32*1024),
-              ("L2", 256*1024),
-              ("L3", 8192*1024)]
-
-    yLines = [("Theoretical Peak MFlops", 3.4*1000*4)]
-    
-    if not opts.loc:
-        opts.loc = 'upper left'
+        
+def plotMFlops(opts, dataSets):
+    if not opts.legendLoc:
+        opts.legendLoc = 'upper left'
 
     if not opts.xmin:
         opts.xmin = 2*9
@@ -493,104 +345,109 @@ def plotRbfFlops(opts, dataSets):
     if not opts.ymax:
         opts.ymax = 8000
 
-    if not opts.cacheSizeAt:
-        opts.cacheSizeAt = 3400
+    if not opts.cacheLabelAt:
+        opts.cacheLabelAt = 3400
     
     plt.clf()
     plt.cla()
     
     ax = plt.subplot(111)
 
-    CS = itertools.cycle(saneColors[0:len(sets)])
-    MR = itertools.cycle(['+', '.',   'x', '1',  '2', '3'][0:len(sets)])
-    MS = itertools.cycle([7,   7,   7,  7,   10, 10][0:len(sets)])
-    LS = itertools.cycle(['-'] * len(sets) +
-                         ['--'] * len(sets) +
-                         [':'] * len(sets))
+    numVariants = len(opts.variant)
+    
+    CS = itertools.cycle(plotColors[0:numVariants])
+    MR = itertools.cycle(['+', '.',   'x', '1',  '2', '3'][0:numVariants])
+    MS = itertools.cycle([7,   7,   7,  7,   10, 10][0:numVariants])
+    LS = itertools.cycle(['-', '--', ':'])
 
     labeledData = {}
     
-    for i in range(0, len(dataSets)):
-        data = dataSets[i]
-        name = opts.dataset[i]
+    for name in dataSets.keys():
+        data = dataSets[name]
+
+        ls = LS.next()
         
-        for (f, label) in sets:
-            r = selectField(data, 'rbf', "variant", f)
+        for v in opts.variant:
+            r = selectField(data, opts.func, "variant", v)
 
-            if len(r) > 0 and (name != 'haskell' or label == 'Haskell'):
-                numBytes = 2*r['n']*8
+            label = LABELS[(opts.func, v)]
 
-                flops = 3.0*r.n/(r.tmean*1000*1000)
-                flops_stddev = 3.0*r.n/((r.tmean - r.tstddev)*1000*1000) - flops
+            if len(r) > 0 and len(dataSets) == 1 or (name != 'haskell' and label != 'Haskell' or name == 'haskell' and label == 'Haskell'):
+                numBytes = opts.bytesfactor*r['n']
+
+                flops = opts.flopsfactor*r.n/(r.tmean*1000*1000)
+                flops_stddev = opts.flopsfactor*r.n/((r.tmean - r.tstddev)*1000*1000) - flops
 
                 if not opts.errorbars:
                     flops_stddev = None
 
                 # Don't want "Haskell (haskell)"
-                if name != label:
+                if len(dataSets) != 1 and name.lower() != label.lower():
                     label = label + " (" + name + ")"
 
                 labeledData[label] = (numBytes, flops)
-                    
+
                 plt.errorbar(numBytes, flops,
                              yerr=flops_stddev,
                              color=CS.next(),
                              marker=MR.next(),
-                             linestyle=LS.next(),
+                             linestyle=ls,
                              markersize=MS.next(),
                              label=label)
             else:
                 CS.next()
                 MR.next()
-                LS.next()
-                MS.next()            
-            
+                MS.next()   
+
+    #
+    # Plot cache sizes
+    #
     COLOR=(0.3,0.3,0.3)
     ALPHA=0.5
-
-    if False:
-        plt.text(2*1e2, 4700, "Higher is better",
-                 fontsize=16,
-                 horizontalalignment='center',
-                 verticalalignment='center',
-                 color='k',
-                 alpha=1.0)
-
+    
     temp = 0.02*(opts.ymax-opts.ymin)
-    YMID1 = opts.cacheSizeAt - temp
-    YMID2 = opts.cacheSizeAt
-    YMID3 = opts.cacheSizeAt + temp
+    YMID1 = opts.cacheLabelAt - temp
+    YMID2 = opts.cacheLabelAt
+    YMID3 = opts.cacheLabelAt + temp
+    
+    xLines = [("L1", opts.l1),
+              ("L2", opts.l2),
+              ("L3", opts.l3)]
     
     for (lbl, x) in xLines:
-        plt.vlines(x, opts.ymin, YMID1, colors=COLOR, alpha=ALPHA)
-        plt.text(x, YMID2, lbl,
-                 fontsize=16,
-                 rotation='vertical',
-                 horizontalalignment='center',
-                 verticalalignment='center',
-                 color=COLOR,
-                 alpha=ALPHA)
-        plt.vlines(x, YMID3, opts.ymax, colors=COLOR, alpha=ALPHA)
+        if x:
+            plt.vlines(x, opts.ymin, YMID1, colors=COLOR, alpha=ALPHA)
+            plt.text(x, YMID2, lbl,
+                     fontsize=16,
+                     rotation='vertical',
+                     horizontalalignment='center',
+                     verticalalignment='center',
+                     color=COLOR,
+                     alpha=ALPHA)
+            plt.vlines(x, YMID3, opts.ymax, colors=COLOR, alpha=ALPHA)
 
     plt.xlabel('Working Set (bytes)')
     plt.ylabel('MFlops')
     
     ax.set_xscale('log', basex=10)
     ax.set_yscale('linear')
-    ax.set_autoscale_on(False)
-    ax.set_xlim(xmin=opts.xmin, xmax=opts.xmax)
-    ax.set_ylim(ymin=opts.ymin, ymax=opts.ymax)
+
+    if not opts.xmin and not opts.xmax and not opts.ymin and not opts.ymax:
+        ax.set_autoscale_on(True)
+    else:
+        ax.set_autoscale_on(False)
+        ax.set_xlim(xmin=opts.xmin, xmax=opts.xmax)
+        ax.set_ylim(ymin=opts.ymin, ymax=opts.ymax)
     
-    plt.legend(loc=opts.loc, numpoints=1)
+    leg = plt.legend(loc=opts.legendLoc, numpoints=1)
 
     if opts.sortLegendAt:
-        x = float(eval(opts.sortLegendAt))
         handles, labels = ax.get_legend_handles_labels()
 
         def f((_, l)):
             (numBytes, flops) = labeledData[l]
             for i in range(0, len(numBytes)):
-                if numBytes[i] == x:
+                if numBytes[i] == opts.sortLegendAt:
                     return flops[i]
 
             return None
@@ -601,30 +458,26 @@ def plotRbfFlops(opts, dataSets):
         newHandles = [h for (h,_) in temp]
         newLabels = [l for (_,l) in temp]
         
-        ax.legend(newHandles, newLabels, loc=opts.loc, numpoints=1)
+        leg = ax.legend(newHandles, newLabels, loc=opts.legendLoc, numpoints=1)
+
+    leg.legendPatch.set_alpha(0.0)
+    
+    if opts.textColor:
+        ax.xaxis.label.set_color(opts.textColor)
+        ax.yaxis.label.set_color(opts.textColor)
+        ax.tick_params(axis='x', colors=opts.textColor)
+        ax.tick_params(axis='y', colors=opts.textColor)
 
 #
+# Mac Keynote colors I use
 #
-#
-techfestColors = ["#00BCF2",
-                  "#68217A",
-                  "#009E49",
-                  "#E81123",
-                  "#00188F",
 
-                  "#00BCF2",
-                  "#00B294",
-                  "#009E49",
-                  "#BAD80A",
-                  
-                  "#FFF100",
-                  "#FF8C00",
-                  "#E81123",
-                  "#EC008C",
-                  
-                  "#68217A",
-                  "#00188F"
-                  ]
+DARKRED    = '#cc0000'
+DARKBLUE   = '#0000cc'
+SEAGREEN   = '#009e73'
+DARKYELLOW = '#f0e442'
+
+LIGHTGREY = '#414141'
 
 # Excel color scheme
 # From:
@@ -643,29 +496,68 @@ excelColors = ["#4572A7",
 
 # From:
 #   http://www.huyng.com/posts/sane-color-scheme-for-matplotlib/
-saneColors = ["#348ABD",
-              "#467821",
-              "#A60628",
-              "#7A68A6",
-              "#CF4457",
-              "#188487",
-              "#E24A33"]
+#
+#   E24A33 : orange
+#   7A68A6 : purple
+#   348ABD : blue
+#   188487 : turquoise
+#   A60628 : red
+#   CF4457 : pink
+#   467821 : green
+
+ORANGE    = '#E24A33'
+PURPLE    = '#7A68A6'
+BLUE      = '#348ABD'
+TURQUOISE = '#188487'
+RED       = '#A60628'
+PINK      = '#CF4457'
+GREEN     = '#467821'
+
+saneColors = [BLUE,
+              PURPLE,
+              RED,
+              GREEN,
+              PINK,
+              TURQUOISE,
+              ORANGE]
+
+# saneColors = ["#A60628",
+#               "#348ABD",
+#               "#467821",
+#               "#E24A33",
+#               "#188487",
+#               "#CF4457",
+#               "#7A68A6"]
 
 plotColors = saneColors
 
 def matplotConfig(opts):
-    rc('text', usetex=True)
-    rc('text.latex', preview=True)
-
-    if opts.palatino:
+    if opts.gill:
+        font = {'family' : 'Gill Sans Std',
+                'style'  : 'normal', 
+                'weight' : 'light'}
+        rc('font', **font)
+    elif opts.palatino:
+        rc('text', usetex=True)
+        rc('text.latex', preview=True)
         rc('text.latex', preamble='\usepackage{mathpazo}')
-        rc('font',**{'family':'serif','serif':['Palatino']})
-    elif opts.calibri:
-        rc('text.latex', preamble='')
-        rc('font',**{'family':'serif','serif':['Calibri']})
+        font = {'family' : 'Palatino',
+                'style'  : 'normal', 
+                'weight' : 'normal'}
+        rc('font', **font)
+    elif opts.segoe:
+        font = {'family' : 'Segoe UI',
+                'style'  : 'normal', 
+                'weight' : 'normal'}
+        rc('font', **font)
     else:
+        rc('text', usetex=True)
+        rc('text.latex', preview=True)
         rc('text.latex', preamble='\usepackage{mathptmx}')
-        rc('font',**{'family':'serif','serif':['Times']})
+        font = {'family' : 'Times New Roman',
+                'style'  : 'normal', 
+                'weight' : 'normal'}
+        rc('font', **font)
 
     if not opts.fontsize:
         opts.fontsize = 20
@@ -680,6 +572,9 @@ def matplotConfig(opts):
 
     rc('lines', antialiased=True)
     rc('figure', figsize=(12,9))
+
+    if opts.textColor:
+        rc('text', color=opts.textColor)
 
 if __name__ == '__main__':
     main()
