@@ -82,15 +82,15 @@ main = do
 
         when (null args || "rbf" `elem` args) $ do
             runOne "rbf" "vector"       n (uncurry (Rbf.Double.Vector.rbf nu))  (fu2, fv2)
-            runOne "rbf" "vector2"      n (uncurry (Rbf.Double.VectorAlt1.rbf nu))  (fu2, fv2)
-            runOne "rbf" "vector3"      n (uncurry (Rbf.Double.VectorAlt2.rbf nu))  (fu2, fv2)
+            --runOne "rbf" "vector2"      n (uncurry (Rbf.Double.VectorAlt1.rbf nu))  (fu2, fv2)
+            --runOne "rbf" "vector3"      n (uncurry (Rbf.Double.VectorAlt2.rbf nu))  (fu2, fv2)
             runOne "rbf" "cmanual"      n (uncurry (Rbf.Double.CManual.rbf nu)) (fu2, fv2)
             runOne "rbf" "cmanual_int"  n (uncurry (Rbf.Double.CManualIntermediate.rbf nu)) (fu2, fv2)
             runOne "rbf" "blitz"        n (uncurry (Rbf.Double.Blitz.rbf nu)) (fu2, fv2)
             runOne "rbf" "boost"        n (uncurry (Rbf.Double.Boost.rbf nu)) (fu2, fv2)
             runOne "rbf" "eigen"        n (uncurry (Rbf.Double.Eigen.rbf nu)) (fu2, fv2)
             runOne "rbf" "eigen_abs"    n (uncurry (Rbf.Double.Eigen.rbf_abs nu)) (fu2, fv2)
-            runOne "rbf" "salt"         n (uncurry (Rbf.Double.SALT.rbf nu)) (fu2, fv2)
+            --runOne "rbf" "salt"         n (uncurry (Rbf.Double.SALT.rbf nu)) (fu2, fv2)
 
     runOne  ::  String
             ->  String
