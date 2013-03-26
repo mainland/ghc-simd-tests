@@ -1,21 +1,22 @@
 The source code here requires a version of ghc built from the simd
 branch. Vectors primops only work when compiling with `-fllvm`. You will also
-need to patched version of the `dph` and `vector` libraries. Here are the steps
-to get the SIMD branch up and running.
+need to patched version of the `primitive`, `vector`, and `dph` libraries. You
+can check out a complete source tree using the `bin/ghc-simd-clone.sh`
+script. For example:
 
-1. Set up a ghc tree as you normally would. See the [GHC wiki](http://hackage.haskell.org/trac/ghc/wiki/Building/GettingTheSources) for instructions on how to get the GHC sources.
+    ./bin/ghc-simd-clone.sh http://darcs.haskell.org/ghc.git ghc-simd
 
-1. Replace `libraries/dph` with the `simd` branch checked out from `git@github.com:mainland/dph.git`.
+This will check out the simd branch of ghc in ghc-simd, perform a `sync-all
+get`, and then check out the simd branches of the `primitive`, `vector`, and
+`dph` libraries. If you have a local mirror of
+`http://darcs.haskell.org/ghc.git` at `LOCAL`, this might be faster:
 
-1. Replace `libraries/vector` with the `simd` branch checked out from `git@github.com:mainland/vector.git`.
+    ./bin/ghc-simd-clone.sh LOCAL ghc-simd
 
-1. Use the fingerprint script to restore your repository state to the hashes
-recorded in the `simd.fp` file in this repository:
-
-        ./utils/fingerprint/fingerprint.py restore -f simd.fp
-
-1. Configure and build as you would normally (see the [GHC
-wiki](http://hackage.haskell.org/trac/ghc/wiki/Building) again).
+After checking out a complete source tree with the `ghc-simd-clone.sh` script,
+configure and build as you would normally (see the [GHC
+wiki](http://hackage.haskell.org/trac/ghc/wiki/Building)). Note that
+`ghc-simd-clone.sh` automatically enables the `quick-llvm` `BuildFlavour`.
 
 ## Windows
 
@@ -23,7 +24,7 @@ Unfortunately, Win32 requires a patch to LLVM due to the fact that the stack is
 only 4-byte aligned on Win32, causing LLVM to 1) insert extra prologue/epilogue
 code to align the stack, and 2) disable tail calls. The patch tricks LLVM into
 thinking 128-bit SSE registers only need to be 4-byte aligned. GHC's LLVM
-mangler then rewrites all movaps instructions (for register spills) to movups
-instructions (only on Win32) so that SSE registers really *do* only have to be
-4-byte aligned :) The patch is in the `patches` directory,
+mangler then rewrites all `movaps` instructions (for register spills) to
+`movups` instructions (only on Win32) so that SSE registers really *do* only
+have to be 4-byte aligned :) The patch is in the `patches` directory,
 [here](patches/llvm-3.0.patch).
