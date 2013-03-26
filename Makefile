@@ -220,6 +220,10 @@ par-bench : benchmarks/par-bench/Main.hs $(COMMON_SRC) $(INPLACE_PACKAGES)
 	    -o $@
 
 SSE_BENCH_SRC = \
+	benchmarks/sse-bench/Kahan/Scalar.hs \
+	benchmarks/sse-bench/Kahan/SSE.hs \
+	benchmarks/sse-bench/Sum/Scalar.hs \
+	benchmarks/sse-bench/Sum/SSE.hs \
 	benchmarks/sse-bench/Quickhull/Solver/Scalar.hs \
 	benchmarks/sse-bench/Quickhull/Solver/SSE.hs
 

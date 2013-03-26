@@ -15,6 +15,12 @@ import qualified Data.Vector.Unboxed as V
 import Util.Benchmark
 import Util.Random
 
+import qualified Sum.Scalar
+import qualified Sum.SSE
+
+import qualified Kahan.Scalar
+import qualified Kahan.SSE
+
 import qualified Quickhull.Solver.Scalar
 import qualified Quickhull.Solver.SSE
 
@@ -24,7 +30,7 @@ nTRIALS = 100
 main :: IO ()
 main = do
     args <- getArgs
-    mapM_ (runN args) (map (round . (2**)) [1..24 :: Float])
+    mapM_ (runN args) (map (round . (2**)) [16 :: Float])
   where
     runN :: [String] -> Int -> IO ()
     runN args n = do
@@ -36,6 +42,12 @@ main = do
         evaluate dv
 
         -- Run the benchmarks
+        runOne "sum" "scalar" n Sum.Scalar.sum du
+        runOne "sum" "sse"    n Sum.SSE.sum    du
+
+        runOne "kahan" "scalar" n Kahan.Scalar.sum du
+        runOne "kahan" "sse"    n Kahan.SSE.sum    du
+
         runOne "quickhull" "scalar" n Quickhull.Solver.Scalar.quickhull (du, dv)
         runOne "quickhull" "sse"    n Quickhull.Solver.SSE.quickhull    (du, dv)
 
