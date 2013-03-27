@@ -236,7 +236,6 @@ SSE_BENCH_SRC = \
 	benchmarks/sse-bench/Kde/SSE.hs \
 	benchmarks/sse-bench/VarianceUnbiased/Scalar.hs \
 	benchmarks/sse-bench/VarianceUnbiased/SSE.hs \
-	benchmarks/sse-bench/SMVM/Scalar.hs \
 	benchmarks/sse-bench/Quickhull/Solver/Scalar.hs \
 	benchmarks/sse-bench/Quickhull/Solver/SSE.hs
 
