@@ -8,7 +8,7 @@ import Prelude hiding (sum)
 
 import Data.Primitive.Multi
 
-import qualified Data.Vector.Unboxed as V
+import qualified Vector as V
 
 sum :: V.Vector Double -> Double
 sum v = case V.mfoldl' kahan mkahan (State 0 0 0 0) v of

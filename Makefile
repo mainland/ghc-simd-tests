@@ -41,6 +41,7 @@ GHCFLAGS+=-fllvm -optlo-O3
 GHCFLAGS+= \
 	-hide-all-packages \
 	-package base \
+	-package deepseq \
 	-package dph-lifted-vseg \
 	-package ghc-prim \
 	-package primitive \
@@ -224,12 +225,19 @@ SSE_BENCH_SRC = \
 	benchmarks/sse-bench/Kahan/SSE.hs \
 	benchmarks/sse-bench/Sum/Scalar.hs \
 	benchmarks/sse-bench/Sum/SSE.hs \
+	benchmarks/sse-bench/Dotp/Scalar.hs \
+	benchmarks/sse-bench/Dotp/SSE.hs \
+	benchmarks/sse-bench/Saxpy/Scalar.hs \
+	benchmarks/sse-bench/Saxpy/SSE.hs \
+	benchmarks/sse-bench/Rbf/Scalar.hs \
+	benchmarks/sse-bench/Rbf/SSE.hs \
+	benchmarks/sse-bench/SMVM/Scalar.hs \
 	benchmarks/sse-bench/Quickhull/Solver/Scalar.hs \
 	benchmarks/sse-bench/Quickhull/Solver/SSE.hs
 
 sse-bench : benchmarks/sse-bench/Main.hs $(SSE_BENCH_SRC) $(UTIL_SRC)
 	$(GHC) $(GHCFLAGS) $< $(UTIL_SRC) \
-	    --make \
+	    --make -DSTORABLE=0 \
 	    -odir obj/sse-bench/$* -hidir obj/sse-bench/$* -icommon -ibenchmarks/sse-bench \
 	    -o $@
 

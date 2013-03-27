@@ -6,7 +6,7 @@ module Kahan.Scalar (
 
 import Prelude hiding (sum)
 
-import qualified Data.Vector.Unboxed as V
+import qualified Vector as V
 
 sum :: V.Vector Double -> Double
 sum v = case V.foldl' kahan (Pair 0 0) v of
