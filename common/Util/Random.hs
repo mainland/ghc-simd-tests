@@ -11,7 +11,8 @@
 
 module Util.Random (
     randomMM,
-    randomU
+    randomU,
+    randomSparseMatrix
   ) where
 
 import Control.Applicative
@@ -22,6 +23,7 @@ import Data.Primitive.Addr
 import Data.Primitive.ByteArray
 import Data.Primitive (sizeOf)
 import Data.Time.Clock.POSIX (getPOSIXTime)
+import qualified Data.Vector as V
 import qualified Data.Vector.Storable as S
 import qualified Data.Vector.Storable.Mutable as MS
 import qualified Data.Vector.Unboxed as U
@@ -49,13 +51,45 @@ randomMM n range = do
 
 randomU :: forall a . (U.Unbox a,Random a) => Int -> (a, a) -> IO (U.Vector a)
 randomU n range = do
-    gen <- newStdGen
+    gen    <- newStdGen
+    (_, v) <- randomU' gen n range
+    return v
+
+randomU' :: forall a g . (RandomGen g,U.Unbox a,Random a)
+         => g -> Int -> (a, a) -> IO (g, U.Vector a)
+randomU' g n range = do
     mvec <- MU.new n
-    fill mvec gen n 0
+    fill mvec g n 0
   where
-    fill :: RandomGen g => U.MVector (PrimState IO) a -> g -> Int -> Int -> IO (U.Vector a)
-    fill mvec _ n i | i == n = U.freeze mvec
+    fill :: U.MVector (PrimState IO) a -> g -> Int -> Int -> IO (g, U.Vector a)
+    fill mvec g n i | i == n = do
+        v <- U.freeze mvec
+        return (g, v)
+
     fill mvec g n i = do
         let (x, g') = randomR range g
         MU.write mvec i x
         fill mvec g' n (i+1)
+
+randomSparseMatrix :: forall a . (U.Unbox a,Random a)
+                   => Int -> Int -> (a, a) -> IO (V.Vector (U.Vector (Int, a)))
+randomSparseMatrix k n range = do
+    g <- newStdGen
+    randomRows g n
+  where
+    randomRows :: RandomGen g => g -> Int -> IO (V.Vector (U.Vector (Int, a)))
+    randomRows _ 0 = return V.empty
+    randomRows g n = do
+        let (g', is :: [Int]) =  randomUniqList g k []
+        (g'', v)     <- randomU' g' k range
+        rows         <- randomRows g'' (n-1)
+        return $ U.zip (U.fromList is) v `V.cons` rows
+
+    randomUniqList :: RandomGen g => g -> Int -> [Int] -> (g, [Int])
+    randomUniqList g 0 xs = (g, xs)
+    randomUniqList g k xs =
+        if x `elem` xs
+            then randomUniqList g' k     xs
+            else randomUniqList g' (k-1) (x:xs)
+      where
+        (x, g') = randomR (0,n) g
