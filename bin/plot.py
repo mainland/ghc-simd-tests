@@ -9,7 +9,7 @@ import matplotlib
 if sys.platform == 'darwin':
     matplotlib.use('Cairo')
 else:
-    matplotlib.use('GTKCairo')
+    matplotlib.use('GTKAgg')
 
 from matplotlib import rc
 import matplotlib.mlab as mlab
