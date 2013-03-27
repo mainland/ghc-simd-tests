@@ -20,6 +20,7 @@ module Vector (
     vmap,
     vfold,
     vsum,
+    vproduct,
     vzipWith
  ) where
 
@@ -84,6 +85,12 @@ vsum  ::  (G.PackedVector Vector a, Num a, Num (Multi a))
 {-# INLINE vsum #-}
 vsum u = vfold (+) 0 u
 
+vproduct  ::  (G.PackedVector Vector a, Num a, Num (Multi a))
+          =>  Vector a
+          ->  a
+{-# INLINE vproduct #-}
+vproduct u = vfold (*) 1 u
+
 vzipWith  ::  (G.PackedVector Vector a, Num a, Num (Multi a))
           =>  (forall a . Num a => a -> a -> a)
           ->  Vector a -> Vector a -> Vector a
@@ -142,6 +149,12 @@ vsum  ::  (G.PackedVector Vector a, Unbox a, Num a, Num (Multi a))
       ->  a
 {-# INLINE vsum #-}
 vsum u = vfold (+) 0 u
+
+vproduct  ::  (G.PackedVector Vector a, Unbox a, Num a, Num (Multi a))
+          =>  Vector a
+          ->  a
+{-# INLINE vproduct #-}
+vproduct u = vfold (*) 1 u
 
 vzipWith  ::  (G.PackedVector Vector a, Unbox a, Num a, Num (Multi a))
           =>  (forall a . Num a => a -> a -> a)
