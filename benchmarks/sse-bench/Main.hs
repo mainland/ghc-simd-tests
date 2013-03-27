@@ -32,6 +32,12 @@ import qualified Saxpy.SSE
 import qualified Rbf.Scalar
 import qualified Rbf.SSE
 
+import qualified Kde.Scalar
+import qualified Kde.SSE
+
+import qualified VarianceUnbiased.Scalar
+import qualified VarianceUnbiased.SSE
+
 import qualified Quickhull.Solver.Scalar
 import qualified Quickhull.Solver.SSE
 
@@ -88,6 +94,12 @@ main = do
 
         runOne "rbf" "scalar" n (\(u,v) -> Rbf.Scalar.rbf nu u v) (du2, dv2)
         runOne "rbf" "sse"    n (\(u,v) -> Rbf.SSE.rbf nu u v)    (du2, dv2)
+
+        runOne "kde" "scalar" n (Kde.Scalar.kde 4096) du1
+        runOne "kde" "sse"    n (Kde.SSE.kde 4096)    du1
+
+        runOne "variance" "scalar" n VarianceUnbiased.Scalar.varianceUnbiased du2
+        runOne "variance" "sse"    n VarianceUnbiased.SSE.varianceUnbiased    du2
 
         runOne "quickhull" "scalar" n Quickhull.Solver.Scalar.quickhull (du1, dv1)
         runOne "quickhull" "sse"    n Quickhull.Solver.SSE.quickhull    (du1, dv1)

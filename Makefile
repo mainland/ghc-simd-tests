@@ -221,6 +221,7 @@ par-bench : benchmarks/par-bench/Main.hs $(COMMON_SRC) $(INPLACE_PACKAGES)
 	    -o $@
 
 SSE_BENCH_SRC = \
+	benchmarks/sse-bench/Common.hs \
 	benchmarks/sse-bench/Kahan/Scalar.hs \
 	benchmarks/sse-bench/Kahan/SSE.hs \
 	benchmarks/sse-bench/Sum/Scalar.hs \
@@ -231,6 +232,10 @@ SSE_BENCH_SRC = \
 	benchmarks/sse-bench/Saxpy/SSE.hs \
 	benchmarks/sse-bench/Rbf/Scalar.hs \
 	benchmarks/sse-bench/Rbf/SSE.hs \
+	benchmarks/sse-bench/Kde/Scalar.hs \
+	benchmarks/sse-bench/Kde/SSE.hs \
+	benchmarks/sse-bench/VarianceUnbiased/Scalar.hs \
+	benchmarks/sse-bench/VarianceUnbiased/SSE.hs \
 	benchmarks/sse-bench/SMVM/Scalar.hs \
 	benchmarks/sse-bench/Quickhull/Solver/Scalar.hs \
 	benchmarks/sse-bench/Quickhull/Solver/SSE.hs
@@ -274,7 +279,7 @@ data/par-bench.dat : par-bench
 	./par-bench +RTS -N16 >$@
 
 data/sse-bench.dat : sse-bench
-	./sse-bench rbf dotp >$@
+	./sse-bench >$@
 
 #
 # Figures
