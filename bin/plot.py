@@ -87,13 +87,6 @@ def getOpts():
                       action="store", type="string", dest="func")
     parser.add_option("--variant",
                       action="append", type="string", dest="variant")
-                      
-    parser.add_option("--sum",
-                      action="store_true", dest="sum")
-    parser.add_option("--dotp",
-                      action="store_true", dest="dotp")
-    parser.add_option("--rbf",
-                      action="store_true", dest="rbf")
 
     parser.add_option("--xdata",
                       action="store", type="string", dest="xdata")
