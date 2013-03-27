@@ -547,7 +547,7 @@ def matplotConfig(opts):
         rc('text', usetex=True)
         rc('text.latex', preview=True)
         rc('text.latex', preamble='\usepackage{mathptmx}')
-        font = {'family' : 'Times New Roman',
+        font = {'family' : 'Nimbus Roman No9 L',
                 'style'  : 'normal', 
                 'weight' : 'normal'}
         rc('font', **font)
