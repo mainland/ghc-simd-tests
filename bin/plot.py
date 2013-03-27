@@ -38,6 +38,11 @@ LABELS = {('dotp', 'scalar'):   'Haskell',
           ('rbf', 'eigen_abs_good'): 'Eigen (good norm2)',
           ('rbf', 'eigen_abs_bad'):  'Eigen (bad norm2)'}
 
+SPEEDUP_LABELS = {'sum':       'summation',
+                  'kahan':     'Kahan summation',
+                  'quickhull': 'Quickhull',
+                  'smvm':      'Sparse matrix-vector multiply'}
+
 def main():
     (opts, filepaths) = getOpts()
 
@@ -66,6 +71,9 @@ def main():
 
     if opts.mflops:
         plotMFlops(opts, data)
+
+    if opts.speedup:
+        plotSpeedup(opts, data)
             
     if opts.output:
         plt.savefig(opts.output, transparent=True)
@@ -84,7 +92,7 @@ def getOpts():
                       action="append", type="string", dest="dataset")
                       
     parser.add_option("--func",
-                      action="store", type="string", dest="func")
+                      action="append", type="string", dest="func")
     parser.add_option("--variant",
                       action="append", type="string", dest="variant")
 
@@ -101,6 +109,8 @@ def getOpts():
                       action="store_true", dest="mflops")
     parser.add_option("--ratio",
                       action="store", type="string", dest="ratio")
+    parser.add_option("--speedup",
+                      action="store_true", dest="speedup")
     
     parser.add_option("--sec",
                       action="store_true", dest="sec")
@@ -205,7 +215,7 @@ def plotTime(opts, data):
     MS = itertools.cycle([10,   7,   10,  10,   10])
 
     for v in opts.variant:
-        r = selectField(data['haskell'], opts.func, "variant", v)
+        r = selectField(data['haskell'], opts.func[0], "variant", v)
         if opts.sec:
             t = r.tmean
         else:
@@ -216,7 +226,7 @@ def plotTime(opts, data):
                      marker=MR.next(),
                      linestyle=LS.next(),
                      markersize=MS.next(),
-                     label=LABELS[(opts.func, v)])
+                     label=LABELS[(opts.func[0], v)])
 
     if opts.sec:
         plt.ylabel('Time (sec)')
@@ -248,7 +258,7 @@ def plotRatio(opts, data):
 
     BASELINE = opts.ratio
     
-    baseline = selectField(data['haskell'], opts.func, 'variant', BASELINE)
+    baseline = selectField(data['haskell'], opts.func[0], 'variant', BASELINE)
     if opts.xdata == 'threads':
         baseline = baseline[::-1]
     baseline_t = baseline.tmean
@@ -361,9 +371,9 @@ def plotMFlops(opts, dataSets):
         ls = LS.next()
         
         for v in opts.variant:
-            r = selectField(data, opts.func, "variant", v)
+            r = selectField(data, opts.func[0], "variant", v)
 
-            label = LABELS[(opts.func, v)]
+            label = LABELS[(opts.func[0], v)]
 
             if len(r) > 0 and len(dataSets) == 1 or (name != 'haskell' and label != 'Haskell' or name == 'haskell' and label == 'Haskell'):
                 numBytes = opts.bytesfactor*r['n']
@@ -460,6 +470,55 @@ def plotMFlops(opts, dataSets):
         ax.yaxis.label.set_color(opts.textColor)
         ax.tick_params(axis='x', colors=opts.textColor)
         ax.tick_params(axis='y', colors=opts.textColor)
+
+def plotSpeedup(opts, data):
+    plt.clf()
+    plt.cla()
+
+    numFuncs = len(opts.func)
+    
+    # the x locations for the groups
+    ind = np.arange(numFuncs)
+    # the width of the bars
+    width = 0.7
+    
+    ax = plt.subplot(111)
+
+    ax.set_ylabel('Percentage speedup')
+
+    if not opts.xmin and not opts.xmax and not opts.ymin and not opts.ymax:
+        ax.set_autoscale_on(True)
+    else:
+        ax.set_autoscale_on(True)
+
+        if not opts.ymin:
+            opts.ymin = 0.0
+
+        if not opts.ymax:
+            opts.ymax = 0.0
+            
+        ax.set_ylim(ymin=opts.ymin, ymax=opts.ymax)
+
+    #ax.set_xticklabels([SPEEDUP_LABELS[f] for f in opts.func], rotation='vertical')
+    ax.set_xticklabels(opts.func, rotation='vertical')
+    
+    ax.set_xticks(ind+width/2)
+
+    i = 0
+    off = 0.0
+
+    for f in opts.func:
+        r = selectField(data['haskell'], f, 'variant', 'scalar')
+        t_scalar = r.tmean
+        
+        r = selectField(data['haskell'], f, 'variant', 'sse')
+        t_sse = r.tmean
+
+        ax.bar(ind[i], (1.0-t_sse/t_scalar)*100, width,
+               color=DARKBLUE,
+               ecolor='k')
+        i += 1
+        off += width
 
 #
 # Mac Keynote colors I use
